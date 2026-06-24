@@ -51,151 +51,119 @@ partial class PatientDashboard
 
     private void InitializeComponent()
     {
-        components = new System.ComponentModel.Container();
-        this.BackColor = Color.FromArgb(15, 15, 26);
-        this.Font = new Font("Segoe UI", 9f);
-        this.Dock = DockStyle.Fill;
-
-        tabControl = new TabControl
-        {
-            Dock = DockStyle.Fill,
-            Font = new Font("Segoe UI", 10f, FontStyle.Bold),
-            Padding = new Point(15, 8),
-            DrawMode = TabDrawMode.OwnerDrawFixed
-        };
-        tabControl.DrawItem += (sender, e) =>
-        {
-            var g = e.Graphics;
-            var tab = tabControl.TabPages[e.Index];
-            var bounds = tabControl.GetTabRect(e.Index);
-            bool selected = e.Index == tabControl.SelectedIndex;
-            using var bgBrush = new System.Drawing.SolidBrush(selected
-                ? Color.FromArgb(21, 101, 192)
-                : Color.FromArgb(30, 30, 58));
-            g.FillRectangle(bgBrush, bounds);
-            TextRenderer.DrawText(g, tab.Text, e.Font ?? tabControl.Font, bounds,
-                selected ? Color.White : Color.FromArgb(160, 160, 200),
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-        };
-
-        // ===== Tab 1: Thông tin cá nhân =====
-        tabInfo = new TabPage { Text = "  👤  Thông tin cá nhân  ", BackColor = Color.FromArgb(15, 15, 26) };
-
-        lblTitle = new Label
-        {
-            Text = "👤 THÔNG TIN CÁ NHÂN",
-            Font = new Font("Segoe UI", 16f, FontStyle.Bold),
-            ForeColor = Color.FromArgb(100, 181, 246),
-            Dock = DockStyle.Top,
-            Height = 55,
-            TextAlign = ContentAlignment.MiddleCenter,
-            BackColor = Color.FromArgb(20, 20, 40)
-        };
-
-        pnlReadOnly = new Panel
-        {
-            Dock = DockStyle.Top,
-            Height = 200,
-            BackColor = Color.FromArgb(20, 20, 40),
-            Padding = new Padding(30, 15, 30, 15)
-        };
-
-        lblSectionInfo = new Label
-        {
-            Text = "📋 THÔNG TIN CƠ BẢN (Chỉ xem)",
-            Font = new Font("Segoe UI", 10f, FontStyle.Bold),
-            ForeColor = Color.FromArgb(150, 200, 255),
-            AutoSize = false, Width = 700, Height = 28, Left = 0, Top = 5
-        };
-
-        lblMaBN = CreateLabel("Mã BN:", 0, 38, bold: true);
-        lblMaBNValue = CreateValueLabel("", 100, 38);
-        lblTenBN = CreateLabel("Họ tên:", 250, 38, bold: true);
-        lblTenBNValue = CreateValueLabel("", 330, 38);
-        lblNgaySinh = CreateLabel("Ngày sinh:", 0, 75, bold: true);
-        lblNgaySinhValue = CreateValueLabel("", 100, 75);
-        lblCCCD = CreateLabel("CCCD:", 250, 75, bold: true);
-        lblCCCDValue = CreateValueLabel("", 330, 75);
-        lblPhai = CreateLabel("Phái:", 0, 112, bold: true);
-        lblPhaiValue = CreateValueLabel("", 100, 112);
-
-        pnlReadOnly.Controls.Add(lblSectionInfo);
-        pnlReadOnly.Controls.AddRange(new Control[]
-        {
-            lblMaBN, lblMaBNValue, lblTenBN, lblTenBNValue,
-            lblNgaySinh, lblNgaySinhValue, lblCCCD, lblCCCDValue,
-            lblPhai, lblPhaiValue
-        });
-
-        pnlEditable = new Panel
-        {
-            Dock = DockStyle.Fill,
-            BackColor = Color.FromArgb(15, 15, 26),
-            Padding = new Padding(30, 10, 30, 10),
-            AutoScroll = true
-        };
-
-        lblSectionEdit = new Label
-        {
-            Text = "✏️ THÔNG TIN CÓ THỂ CẬP NHẬT",
-            Font = new Font("Segoe UI", 10f, FontStyle.Bold),
-            ForeColor = Color.FromArgb(150, 200, 255),
-            AutoSize = false, Width = 700, Height = 28, Left = 0, Top = 10
-        };
-
-        int yStart = 45; int rowH = 60;
-        lblSoNha = CreateFieldLabel("Số nhà:", 0, yStart);
-        txtSoNha = CreateEditField(120, yStart);
-        lblTenDuong = CreateFieldLabel("Tên đường:", 400, yStart);
-        txtTenDuong = CreateEditField(520, yStart);
-        lblQuanHuyen = CreateFieldLabel("Quận/Huyện:", 0, yStart + rowH);
-        txtQuanHuyen = CreateEditField(120, yStart + rowH);
-        lblTinhTP = CreateFieldLabel("Tỉnh/TP:", 400, yStart + rowH);
-        txtTinhTP = CreateEditField(520, yStart + rowH);
-        lblTienSuBenh = CreateFieldLabel("Tiền sử bệnh:", 0, yStart + rowH * 2);
-        txtTienSuBenh = CreateMultilineField(120, yStart + rowH * 2, 820);
-        lblTienSuBenhGD = CreateFieldLabel("Tiền sử bệnh GĐ:", 0, yStart + rowH * 2 + 75);
-        txtTienSuBenhGD = CreateMultilineField(120, yStart + rowH * 2 + 75, 820);
-        lblDiUngThuoc = CreateFieldLabel("Dị ứng thuốc:", 0, yStart + rowH * 2 + 150);
-        txtDiUngThuoc = CreateMultilineField(120, yStart + rowH * 2 + 150, 820);
-
-        btnSave = new Button
-        {
-            Text = "💾  LƯU THAY ĐỔI", Width = 200, Height = 42, Left = 0, Top = yStart + rowH * 2 + 230,
-            BackColor = Color.FromArgb(21, 101, 192), ForeColor = Color.White,
-            FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10f, FontStyle.Bold), Cursor = Cursors.Hand
-        };
-        btnSave.FlatAppearance.BorderSize = 0;
-        btnSave.FlatAppearance.MouseOverBackColor = Color.FromArgb(25, 118, 210);
-        btnSave.Click += new EventHandler(btnSave_Click);
-
-        pnlEditable.Controls.AddRange(new Control[]
-        {
-            lblSectionEdit, lblSoNha, txtSoNha, lblTenDuong, txtTenDuong,
-            lblQuanHuyen, txtQuanHuyen, lblTinhTP, txtTinhTP,
-            lblTienSuBenh, txtTienSuBenh, lblTienSuBenhGD, txtTienSuBenhGD,
-            lblDiUngThuoc, txtDiUngThuoc, btnSave
-        });
-
+        tabControl = new TabControl();
+        tabInfo = new TabPage();
+        pnlEditable = new Panel();
+        lblSectionEdit = new Label();
+        btnSave = new Button();
+        pnlReadOnly = new Panel();
+        lblSectionInfo = new Label();
+        lblTitle = new Label();
+        tabHsba = new TabPage();
+        tabPrescriptions = new TabPage();
+        tabControl.SuspendLayout();
+        tabInfo.SuspendLayout();
+        pnlEditable.SuspendLayout();
+        pnlReadOnly.SuspendLayout();
+        SuspendLayout();
+        // 
+        // tabControl
+        // 
+        tabControl.Controls.Add(tabInfo);
+        tabControl.Controls.Add(tabHsba);
+        tabControl.Controls.Add(tabPrescriptions);
+        tabControl.Location = new Point(0, 0);
+        tabControl.Name = "tabControl";
+        tabControl.SelectedIndex = 0;
+        tabControl.Size = new Size(200, 100);
+        tabControl.TabIndex = 0;
+        tabControl.DrawItem += TabControl_DrawItem;
+        tabControl.SelectedIndexChanged += tabControl_SelectedIndexChanged;
+        // 
+        // tabInfo
+        // 
         tabInfo.Controls.Add(pnlEditable);
         tabInfo.Controls.Add(pnlReadOnly);
         tabInfo.Controls.Add(lblTitle);
-
-        // ===== Tab 2: Hồ sơ bệnh án =====
-        tabHsba = new TabPage { Text = "  📁  Hồ sơ bệnh án  ", BackColor = Color.FromArgb(15, 15, 26) };
-        dgvHsba = CreateDGV();
-        dgvHsba.Dock = DockStyle.Fill;
-        tabHsba.Controls.Add(dgvHsba);
-
-        // ===== Tab 3: Đơn thuốc =====
-        tabPrescriptions = new TabPage { Text = "  💊  Đơn thuốc  ", BackColor = Color.FromArgb(15, 15, 26) };
-        dgvPrescriptions = CreateDGV();
-        dgvPrescriptions.Dock = DockStyle.Fill;
-        tabPrescriptions.Controls.Add(dgvPrescriptions);
-
-        tabControl.TabPages.AddRange(new[] { tabInfo, tabHsba, tabPrescriptions });
-        tabControl.SelectedIndexChanged += new EventHandler(tabControl_SelectedIndexChanged);
-        this.Controls.Add(tabControl);
+        tabInfo.Location = new Point(4, 24);
+        tabInfo.Name = "tabInfo";
+        tabInfo.Size = new Size(192, 72);
+        tabInfo.TabIndex = 0;
+        // 
+        // pnlEditable
+        // 
+        pnlEditable.Controls.Add(lblSectionEdit);
+        pnlEditable.Controls.Add(btnSave);
+        pnlEditable.Location = new Point(0, 0);
+        pnlEditable.Name = "pnlEditable";
+        pnlEditable.Size = new Size(200, 100);
+        pnlEditable.TabIndex = 0;
+        // 
+        // lblSectionEdit
+        // 
+        lblSectionEdit.Location = new Point(0, 0);
+        lblSectionEdit.Name = "lblSectionEdit";
+        lblSectionEdit.Size = new Size(100, 23);
+        lblSectionEdit.TabIndex = 0;
+        // 
+        // btnSave
+        // 
+        btnSave.FlatAppearance.BorderSize = 0;
+        btnSave.FlatAppearance.MouseOverBackColor = Color.FromArgb(25, 118, 210);
+        btnSave.Location = new Point(0, 0);
+        btnSave.Name = "btnSave";
+        btnSave.Size = new Size(75, 23);
+        btnSave.TabIndex = 1;
+        btnSave.Click += btnSave_Click;
+        // 
+        // pnlReadOnly
+        // 
+        pnlReadOnly.Controls.Add(lblSectionInfo);
+        pnlReadOnly.Location = new Point(0, 0);
+        pnlReadOnly.Name = "pnlReadOnly";
+        pnlReadOnly.Size = new Size(200, 100);
+        pnlReadOnly.TabIndex = 1;
+        // 
+        // lblSectionInfo
+        // 
+        lblSectionInfo.Location = new Point(0, 0);
+        lblSectionInfo.Name = "lblSectionInfo";
+        lblSectionInfo.Size = new Size(100, 23);
+        lblSectionInfo.TabIndex = 0;
+        // 
+        // lblTitle
+        // 
+        lblTitle.Location = new Point(0, 0);
+        lblTitle.Name = "lblTitle";
+        lblTitle.Size = new Size(100, 23);
+        lblTitle.TabIndex = 2;
+        // 
+        // tabHsba
+        // 
+        tabHsba.Location = new Point(4, 24);
+        tabHsba.Name = "tabHsba";
+        tabHsba.Size = new Size(192, 72);
+        tabHsba.TabIndex = 1;
+        // 
+        // tabPrescriptions
+        // 
+        tabPrescriptions.Location = new Point(4, 24);
+        tabPrescriptions.Name = "tabPrescriptions";
+        tabPrescriptions.Size = new Size(192, 72);
+        tabPrescriptions.TabIndex = 2;
+        // 
+        // PatientDashboard
+        // 
+        BackColor = Color.FromArgb(15, 15, 26);
+        Controls.Add(tabControl);
+        Font = new Font("Segoe UI", 9F);
+        Name = "PatientDashboard";
+        Size = new Size(709, 686);
+        tabControl.ResumeLayout(false);
+        tabInfo.ResumeLayout(false);
+        pnlEditable.ResumeLayout(false);
+        pnlReadOnly.ResumeLayout(false);
+        ResumeLayout(false);
     }
 
     private static Label CreateLabel(string text, int left, int top, bool bold = false)
