@@ -33,10 +33,10 @@ CREATE ROLE ROLE_DIEUPHOI;
 -- Role dành cho Bác sĩ/Y sĩ: xem/cập nhật HSBA, kê đơn thuốc
 CREATE ROLE ROLE_BACSI;
 
--- Role dành cho Kỹ thuật viên: xem và cập nhật kết quả dịch vụ của mình
+-- [THÀNH VIÊN 2] Role dành cho Kỹ thuật viên: xem và cập nhật kết quả dịch vụ của mình
 CREATE ROLE ROLE_KTHUATVIEN;
 
--- Role dành cho Bệnh nhân: chỉ xem/cập nhật thông tin cá nhân và HSBA của mình
+-- [THÀNH VIÊN 2] Role dành cho Bệnh nhân: chỉ xem/cập nhật thông tin cá nhân và HSBA của mình
 CREATE ROLE ROLE_BENHNHAN;
 
 PROMPT --- Đã tạo 4 roles ---.
@@ -316,6 +316,7 @@ GRANT SELECT ON SYSTEM."THÔNGBÁO" TO ROLE_BACSI;
 
 -- =====================================================================
 -- BƯỚC 8: GRANT QUYỀN CHO ROLE_KTHUATVIEN (TC#5)
+-- [THÀNH VIÊN 2 THỰC HIỆN]
 -- Kỹ thuật viên:
 --   ✓ SELECT on VW_HSBA_DV_KTV (view đã lọc theo ORAUSER)
 --   ✓ UPDATE(KẾTQUẢ) on HSBA_DV (nhập kết quả dịch vụ)
@@ -329,6 +330,7 @@ GRANT SELECT ON SYSTEM."THÔNGBÁO" TO ROLE_KTHUATVIEN;
 
 -- =====================================================================
 -- BƯỚC 9: GRANT QUYỀN CHO ROLE_BENHNHAN
+-- [THÀNH VIÊN 2 THỰC HIỆN]
 -- Bệnh nhân:
 --   ✓ SELECT on VW_BENHNHAN_SELF (xem thông tin cá nhân)
 --   ✓ UPDATE cột địa chỉ, tiền sử bệnh cá nhân

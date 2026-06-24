@@ -750,6 +750,51 @@ END TRG_AUDIT_DONTHUOC;
 
 PROMPT --- Đã tạo 3 audit triggers ---.
 
+-- =====================================================================
+-- VPD POLICY CHO TC#5: NHÂN VIÊN XEM THÔNG TIN CHÍNH MÌNH
+-- =====================================================================
+PROMPT --- Áp dụng VPD Policy TC#5 (Nhân viên) ---.
+
+CREATE OR REPLACE FUNCTION policy_nhanvien_chinhminh(
+    schema_name IN VARCHAR2,
+    table_name  IN VARCHAR2
+) RETURN VARCHAR2 IS
+    v_user VARCHAR2(100);
+BEGIN
+    v_user := SYS_CONTEXT('USERENV', 'SESSION_USER');
+    -- Quản trị viên (DBA/SYSTEM) có thể xem toàn bộ dữ liệu
+    IF v_user IN ('SYSTEM', 'SYS', 'DBA_USER') THEN
+        RETURN NULL;
+    END IF;
+    -- Lọc dòng của chính nhân viên đó thông qua cột ORAUSER
+    RETURN '"ORAUSER" = ''' || v_user || '''';
+END policy_nhanvien_chinhminh;
+/
+
+BEGIN
+  DBMS_RLS.DROP_POLICY(
+    object_schema => 'SYSTEM',
+    object_name   => '"NHÂNVIÊN"',
+    policy_name   => 'POL_TC5_NHANVIEN_CHINHMINH'
+  );
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+  DBMS_RLS.ADD_POLICY(
+    object_schema   => 'SYSTEM',
+    object_name     => '"NHÂNVIÊN"',
+    policy_name     => 'POL_TC5_NHANVIEN_CHINHMINH',
+    function_schema => 'SYSTEM',
+    policy_function => 'policy_nhanvien_chinhminh',
+    statement_types => 'SELECT,UPDATE',
+    update_check    => FALSE,
+    enable          => TRUE
+  );
+END;
+/
+
 COMMIT;
 
 -- =====================================================================

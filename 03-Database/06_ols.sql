@@ -4,6 +4,7 @@
 -- Oracle 21c XE, Charset: AL32UTF8
 -- Mô tả: Yêu cầu 2 - Oracle Label Security (OLS)
 --        Kiểm soát truy cập dữ liệu theo nhãn bảo mật đa chiều
+-- Phụ trách: THÀNH VIÊN 2 (Chuyên gia Bảo mật hệ thống)
 -- Chạy với quyền: SYSDBA hoặc LBAC_DBA
 -- Thứ tự chạy: 6/8
 --
