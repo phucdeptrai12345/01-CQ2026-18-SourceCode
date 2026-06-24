@@ -167,4 +167,20 @@ public partial class CoordinatorDashboard : UserControl
         if (dlg.ShowDialog() == DialogResult.OK)
             LoadHsbaDv();
     }
+
+    private void TabControl_DrawItem(object sender, DrawItemEventArgs e)
+    {
+        var g = e.Graphics;
+        var tab = tabControl.TabPages[e.Index];
+        var bounds = tabControl.GetTabRect(e.Index);
+        bool selected = e.Index == tabControl.SelectedIndex;
+        var bgBrush = new System.Drawing.SolidBrush(selected
+            ? Color.FromArgb(21, 101, 192)
+            : Color.FromArgb(30, 30, 58));
+        g.FillRectangle(bgBrush, bounds);
+        var textColor = selected ? Color.White : Color.FromArgb(160, 160, 200);
+        TextRenderer.DrawText(g, tab.Text, e.Font ?? tabControl.Font, bounds,
+            textColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+        bgBrush.Dispose();
+    }
 }

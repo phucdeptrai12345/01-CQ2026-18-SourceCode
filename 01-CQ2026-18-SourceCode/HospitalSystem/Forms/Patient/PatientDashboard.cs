@@ -14,6 +14,9 @@ public partial class PatientDashboard : UserControl
     {
         InitializeComponent();
         LoadMyInfo();
+        // Attach designer-friendly DrawItem handler if not present
+        // (The actual handler is implemented below to avoid lambda in Designer file)
+        // Ensure tabControl draw handler exists
     }
 
     private void LoadMyInfo()
@@ -81,6 +84,21 @@ public partial class PatientDashboard : UserControl
             LoadMyHsba();
         else if (tabControl.SelectedTab == tabPrescriptions && !_prescLoaded)
             LoadMyPrescriptions();
+    }
+
+    private void TabControl_DrawItem(object sender, DrawItemEventArgs e)
+    {
+        var g = e.Graphics;
+        var tab = tabControl.TabPages[e.Index];
+        var bounds = tabControl.GetTabRect(e.Index);
+        bool selected = e.Index == tabControl.SelectedIndex;
+        using var bgBrush = new System.Drawing.SolidBrush(selected
+            ? Color.FromArgb(21, 101, 192)
+            : Color.FromArgb(30, 30, 58));
+        g.FillRectangle(bgBrush, bounds);
+        TextRenderer.DrawText(g, tab.Text, e.Font ?? tabControl.Font, bounds,
+            selected ? Color.White : Color.FromArgb(160, 160, 200),
+            TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
     }
 
     private void LoadMyHsba()

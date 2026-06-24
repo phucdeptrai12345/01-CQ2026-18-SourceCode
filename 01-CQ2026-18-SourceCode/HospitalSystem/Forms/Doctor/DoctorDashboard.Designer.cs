@@ -32,79 +32,206 @@ partial class DoctorDashboard
 
     private void InitializeComponent()
     {
-        components = new System.ComponentModel.Container();
-        this.BackColor = Color.FromArgb(15, 15, 26);
-        this.Font = new Font("Segoe UI", 9f);
-        this.Dock = DockStyle.Fill;
-
-        tabControl = new TabControl
-        {
-            Dock = DockStyle.Fill,
-            Font = new Font("Segoe UI", 10f, FontStyle.Bold),
-            Padding = new Point(15, 8),
-            DrawMode = TabDrawMode.OwnerDrawFixed
-        };
-        tabControl.DrawItem += (sender, e) =>
-        {
-            var g = e.Graphics;
-            var tab = tabControl.TabPages[e.Index];
-            var bounds = tabControl.GetTabRect(e.Index);
-            bool selected = e.Index == tabControl.SelectedIndex;
-            using var bgBrush = new System.Drawing.SolidBrush(selected
-                ? Color.FromArgb(21, 101, 192)
-                : Color.FromArgb(30, 30, 58));
-            g.FillRectangle(bgBrush, bounds);
-            TextRenderer.DrawText(g, tab.Text, e.Font ?? tabControl.Font, bounds,
-                selected ? Color.White : Color.FromArgb(160, 160, 200),
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-        };
-
-        // Tab 1: HSBA của tôi
-        tabHsba = new TabPage { Text = "  📁  HSBA của tôi  ", BackColor = Color.FromArgb(15, 15, 26) };
-        pnlHsbaToolbar = new Panel { Dock = DockStyle.Top, Height = 50, BackColor = Color.FromArgb(20, 20, 40), Padding = new Padding(10, 8, 10, 8) };
-
-        btnViewDetail = CreateBtn("🔍  Xem chi tiết", Color.FromArgb(21, 101, 192), 10);
-        btnViewDetail.Click += new EventHandler(btnViewDetail_Click);
-
-        btnUpdateDiagnosis = CreateBtn("✏️  Cập nhật CĐ", Color.FromArgb(46, 125, 50), 140);
-        btnUpdateDiagnosis.Click += new EventHandler(btnUpdateDiagnosis_Click);
-
-        btnUpdatePatientMedical = CreateBtn("🩺  Tiền sử BN", Color.FromArgb(100, 60, 140), 270);
-        btnUpdatePatientMedical.Click += new EventHandler(btnUpdatePatientMedical_Click);
-
-        lblHsbaCount = new Label { Text = "Đang tải...", ForeColor = Color.FromArgb(150, 200, 255), AutoSize = false, Width = 200, Height = 32, Left = 680, Top = 9, TextAlign = ContentAlignment.MiddleRight, Font = new Font("Segoe UI", 9f) };
-        pnlHsbaToolbar.Controls.AddRange(new Control[] { btnViewDetail, btnUpdateDiagnosis, btnUpdatePatientMedical, lblHsbaCount });
-
-        dgvHsba = CreateDGV();
-        dgvHsba.Dock = DockStyle.Fill;
-        dgvHsba.SelectionChanged += new EventHandler(dgvHsba_SelectionChanged);
-
-        tabHsba.Controls.Add(dgvHsba);
+        tabControl = new TabControl();
+        tabHsba = new TabPage();
+        pnlHsbaToolbar = new Panel();
+        btnViewDetail = new Button();
+        btnUpdateDiagnosis = new Button();
+        btnUpdatePatientMedical = new Button();
+        lblHsbaCount = new Label();
+        tabServices = new TabPage();
+        tabPrescriptions = new TabPage();
+        pnlPresToolbar = new Panel();
+        btnAddPrescription = new Button();
+        btnEditPrescription = new Button();
+        btnDeletePrescription = new Button();
+        tabControl.SuspendLayout();
+        tabHsba.SuspendLayout();
+        pnlHsbaToolbar.SuspendLayout();
+        tabPrescriptions.SuspendLayout();
+        pnlPresToolbar.SuspendLayout();
+        SuspendLayout();
+        // 
+        // tabControl
+        // 
+        tabControl.Controls.Add(tabHsba);
+        tabControl.Controls.Add(tabServices);
+        tabControl.Controls.Add(tabPrescriptions);
+        tabControl.Dock = DockStyle.Fill;
+        tabControl.DrawMode = TabDrawMode.OwnerDrawFixed;
+        tabControl.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        tabControl.Location = new Point(0, 0);
+        tabControl.Name = "tabControl";
+        tabControl.Padding = new Point(12, 8);
+        tabControl.SelectedIndex = 0;
+        tabControl.Size = new Size(1110, 686);
+        tabControl.TabIndex = 0;
+        tabControl.DrawItem += TabControl_DrawItem;
+        // 
+        // tabHsba
+        // 
+        tabHsba.BackColor = Color.FromArgb(15, 15, 26);
         tabHsba.Controls.Add(pnlHsbaToolbar);
-
-        // Tab 2: Dịch vụ
-        tabServices = new TabPage { Text = "  🔬  Dịch vụ chẩn đoán  ", BackColor = Color.FromArgb(15, 15, 26) };
-        dgvServices = CreateDGV();
-        dgvServices.Dock = DockStyle.Fill;
-        tabServices.Controls.Add(dgvServices);
-
-        // Tab 3: Đơn thuốc
-        tabPrescriptions = new TabPage { Text = "  💊  Đơn thuốc  ", BackColor = Color.FromArgb(15, 15, 26) };
-        pnlPresToolbar = new Panel { Dock = DockStyle.Top, Height = 50, BackColor = Color.FromArgb(20, 20, 40), Padding = new Padding(10, 8, 10, 8) };
-        btnAddPrescription = CreateBtn("➕  Thêm thuốc", Color.FromArgb(21, 101, 192), 10);
-        btnAddPrescription.Click += new EventHandler(btnAddPrescription_Click);
-        btnEditPrescription = CreateBtn("✏️  Sửa liều", Color.FromArgb(46, 125, 50), 140);
-        btnEditPrescription.Click += new EventHandler(btnEditPrescription_Click);
-        btnDeletePrescription = CreateBtn("🗑️  Xóa thuốc", Color.FromArgb(183, 28, 28), 270);
-        btnDeletePrescription.Click += new EventHandler(btnDeletePrescription_Click);
-        pnlPresToolbar.Controls.AddRange(new Control[] { btnAddPrescription, btnEditPrescription, btnDeletePrescription });
-        dgvPrescriptions = CreateDGV();
-        dgvPrescriptions.Dock = DockStyle.Fill;
-        tabPrescriptions.Controls.Add(dgvPrescriptions);
+        tabHsba.Location = new Point(4, 36);
+        tabHsba.Name = "tabHsba";
+        tabHsba.Size = new Size(1102, 646);
+        tabHsba.TabIndex = 0;
+        tabHsba.Text = "  📁  HSBA của tôi  ";
+        // 
+        // pnlHsbaToolbar
+        // 
+        pnlHsbaToolbar.BackColor = Color.FromArgb(20, 20, 40);
+        pnlHsbaToolbar.Controls.Add(btnViewDetail);
+        pnlHsbaToolbar.Controls.Add(btnUpdateDiagnosis);
+        pnlHsbaToolbar.Controls.Add(btnUpdatePatientMedical);
+        pnlHsbaToolbar.Controls.Add(lblHsbaCount);
+        pnlHsbaToolbar.Dock = DockStyle.Top;
+        pnlHsbaToolbar.Location = new Point(0, 0);
+        pnlHsbaToolbar.Name = "pnlHsbaToolbar";
+        pnlHsbaToolbar.Padding = new Padding(10);
+        pnlHsbaToolbar.Size = new Size(1102, 50);
+        pnlHsbaToolbar.TabIndex = 0;
+        // 
+        // btnViewDetail
+        // 
+        btnViewDetail.BackColor = Color.FromArgb(21, 101, 192);
+        btnViewDetail.FlatAppearance.BorderSize = 0;
+        btnViewDetail.FlatStyle = FlatStyle.Flat;
+        btnViewDetail.ForeColor = Color.White;
+        btnViewDetail.Location = new Point(10, 0);
+        btnViewDetail.Name = "btnViewDetail";
+        btnViewDetail.Size = new Size(140, 32);
+        btnViewDetail.TabIndex = 0;
+        btnViewDetail.Text = "🔍  Xem chi tiết";
+        btnViewDetail.UseVisualStyleBackColor = false;
+        btnViewDetail.Click += btnViewDetail_Click;
+        // 
+        // btnUpdateDiagnosis
+        // 
+        btnUpdateDiagnosis.BackColor = Color.FromArgb(46, 125, 50);
+        btnUpdateDiagnosis.FlatAppearance.BorderSize = 0;
+        btnUpdateDiagnosis.FlatStyle = FlatStyle.Flat;
+        btnUpdateDiagnosis.ForeColor = Color.White;
+        btnUpdateDiagnosis.Location = new Point(160, 0);
+        btnUpdateDiagnosis.Name = "btnUpdateDiagnosis";
+        btnUpdateDiagnosis.Size = new Size(140, 32);
+        btnUpdateDiagnosis.TabIndex = 1;
+        btnUpdateDiagnosis.Text = "✏️  Cập nhật CĐ";
+        btnUpdateDiagnosis.UseVisualStyleBackColor = false;
+        btnUpdateDiagnosis.Click += btnUpdateDiagnosis_Click;
+        // 
+        // btnUpdatePatientMedical
+        // 
+        btnUpdatePatientMedical.BackColor = Color.FromArgb(100, 60, 140);
+        btnUpdatePatientMedical.FlatAppearance.BorderSize = 0;
+        btnUpdatePatientMedical.FlatStyle = FlatStyle.Flat;
+        btnUpdatePatientMedical.ForeColor = Color.White;
+        btnUpdatePatientMedical.Location = new Point(310, 0);
+        btnUpdatePatientMedical.Name = "btnUpdatePatientMedical";
+        btnUpdatePatientMedical.Size = new Size(140, 32);
+        btnUpdatePatientMedical.TabIndex = 2;
+        btnUpdatePatientMedical.Text = "\U0001fa7a  Tiền sử BN";
+        btnUpdatePatientMedical.UseVisualStyleBackColor = false;
+        btnUpdatePatientMedical.Click += btnUpdatePatientMedical_Click;
+        // 
+        // lblHsbaCount
+        // 
+        lblHsbaCount.Dock = DockStyle.Right;
+        lblHsbaCount.ForeColor = Color.FromArgb(150, 200, 255);
+        lblHsbaCount.Location = new Point(872, 10);
+        lblHsbaCount.Name = "lblHsbaCount";
+        lblHsbaCount.Size = new Size(220, 30);
+        lblHsbaCount.TabIndex = 3;
+        lblHsbaCount.Text = "Đang tải...";
+        lblHsbaCount.TextAlign = ContentAlignment.MiddleRight;
+        // 
+        // tabServices
+        // 
+        tabServices.BackColor = Color.FromArgb(15, 15, 26);
+        tabServices.Location = new Point(4, 36);
+        tabServices.Name = "tabServices";
+        tabServices.Size = new Size(1102, 646);
+        tabServices.TabIndex = 1;
+        tabServices.Text = "  🔬  Dịch vụ chẩn đoán  ";
+        // 
+        // tabPrescriptions
+        // 
+        tabPrescriptions.BackColor = Color.FromArgb(15, 15, 26);
         tabPrescriptions.Controls.Add(pnlPresToolbar);
-
-        tabControl.TabPages.AddRange(new[] { tabHsba, tabServices, tabPrescriptions });
-        this.Controls.Add(tabControl);
+        tabPrescriptions.Location = new Point(4, 36);
+        tabPrescriptions.Name = "tabPrescriptions";
+        tabPrescriptions.Size = new Size(1102, 646);
+        tabPrescriptions.TabIndex = 2;
+        tabPrescriptions.Text = "  💊  Đơn thuốc  ";
+        // 
+        // pnlPresToolbar
+        // 
+        pnlPresToolbar.BackColor = Color.FromArgb(20, 20, 40);
+        pnlPresToolbar.Controls.Add(btnAddPrescription);
+        pnlPresToolbar.Controls.Add(btnEditPrescription);
+        pnlPresToolbar.Controls.Add(btnDeletePrescription);
+        pnlPresToolbar.Dock = DockStyle.Top;
+        pnlPresToolbar.Location = new Point(0, 0);
+        pnlPresToolbar.Name = "pnlPresToolbar";
+        pnlPresToolbar.Padding = new Padding(10);
+        pnlPresToolbar.Size = new Size(1102, 50);
+        pnlPresToolbar.TabIndex = 0;
+        // 
+        // btnAddPrescription
+        // 
+        btnAddPrescription.BackColor = Color.FromArgb(21, 101, 192);
+        btnAddPrescription.FlatAppearance.BorderSize = 0;
+        btnAddPrescription.FlatStyle = FlatStyle.Flat;
+        btnAddPrescription.ForeColor = Color.White;
+        btnAddPrescription.Location = new Point(10, 0);
+        btnAddPrescription.Name = "btnAddPrescription";
+        btnAddPrescription.Size = new Size(120, 32);
+        btnAddPrescription.TabIndex = 0;
+        btnAddPrescription.Text = "➕  Thêm thuốc";
+        btnAddPrescription.UseVisualStyleBackColor = false;
+        btnAddPrescription.Click += btnAddPrescription_Click;
+        // 
+        // btnEditPrescription
+        // 
+        btnEditPrescription.BackColor = Color.FromArgb(46, 125, 50);
+        btnEditPrescription.FlatAppearance.BorderSize = 0;
+        btnEditPrescription.FlatStyle = FlatStyle.Flat;
+        btnEditPrescription.ForeColor = Color.White;
+        btnEditPrescription.Location = new Point(140, 0);
+        btnEditPrescription.Name = "btnEditPrescription";
+        btnEditPrescription.Size = new Size(120, 32);
+        btnEditPrescription.TabIndex = 1;
+        btnEditPrescription.Text = "✏️  Sửa liều";
+        btnEditPrescription.UseVisualStyleBackColor = false;
+        btnEditPrescription.Click += btnEditPrescription_Click;
+        // 
+        // btnDeletePrescription
+        // 
+        btnDeletePrescription.BackColor = Color.FromArgb(183, 28, 28);
+        btnDeletePrescription.FlatAppearance.BorderSize = 0;
+        btnDeletePrescription.FlatStyle = FlatStyle.Flat;
+        btnDeletePrescription.ForeColor = Color.White;
+        btnDeletePrescription.Location = new Point(270, 0);
+        btnDeletePrescription.Name = "btnDeletePrescription";
+        btnDeletePrescription.Size = new Size(120, 32);
+        btnDeletePrescription.TabIndex = 2;
+        btnDeletePrescription.Text = "🗑️  Xóa thuốc";
+        btnDeletePrescription.UseVisualStyleBackColor = false;
+        btnDeletePrescription.Click += btnDeletePrescription_Click;
+        // 
+        // DoctorDashboard
+        // 
+        BackColor = Color.FromArgb(15, 15, 26);
+        Controls.Add(tabControl);
+        Font = new Font("Segoe UI", 9F);
+        Name = "DoctorDashboard";
+        Size = new Size(1110, 686);
+        tabControl.ResumeLayout(false);
+        tabHsba.ResumeLayout(false);
+        pnlHsbaToolbar.ResumeLayout(false);
+        tabPrescriptions.ResumeLayout(false);
+        pnlPresToolbar.ResumeLayout(false);
+        ResumeLayout(false);
     }
 
     private static Button CreateBtn(string text, Color color, int left)

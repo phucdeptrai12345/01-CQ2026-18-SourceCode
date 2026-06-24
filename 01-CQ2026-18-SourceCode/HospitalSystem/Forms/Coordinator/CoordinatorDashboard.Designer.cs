@@ -57,21 +57,7 @@ partial class CoordinatorDashboard
 
         // Đặt màu tab (thông qua override Paint event)
         tabControl.DrawMode = TabDrawMode.OwnerDrawFixed;
-        tabControl.DrawItem += (sender, e) =>
-        {
-            var g = e.Graphics;
-            var tab = tabControl.TabPages[e.Index];
-            var bounds = tabControl.GetTabRect(e.Index);
-            bool selected = e.Index == tabControl.SelectedIndex;
-            var bgBrush = new System.Drawing.SolidBrush(selected
-                ? Color.FromArgb(21, 101, 192)
-                : Color.FromArgb(30, 30, 58));
-            g.FillRectangle(bgBrush, bounds);
-            var textColor = selected ? Color.White : Color.FromArgb(160, 160, 200);
-            TextRenderer.DrawText(g, tab.Text, e.Font ?? tabControl.Font, bounds,
-                textColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-            bgBrush.Dispose();
-        };
+        tabControl.DrawItem += new DrawItemEventHandler(TabControl_DrawItem);
 
         // ================== Tab 1: Bệnh nhân ====================
         tabPatients = new TabPage
@@ -223,7 +209,7 @@ partial class CoordinatorDashboard
         tabHsbaDv.Controls.Add(pnlDvToolbar);
 
         // Thêm tabs vào tabControl
-        tabControl.TabPages.AddRange(new[] { tabPatients, tabHsba, tabHsbaDv });
+        tabControl.TabPages.AddRange(new TabPage[] { tabPatients, tabHsba, tabHsbaDv });
 
         // Thêm tabControl vào UserControl
         this.Controls.Add(tabControl);
