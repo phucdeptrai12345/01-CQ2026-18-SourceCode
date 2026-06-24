@@ -1,0 +1,6 @@
+.claude/
+01-CQ2026-18-SourceCode/HospitalSystem/bin/
+01-CQ2026-18-SourceCode/HospitalSystem/obj/
+*.user
+*.suo
+.vs/
