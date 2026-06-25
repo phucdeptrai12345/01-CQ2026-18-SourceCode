@@ -108,12 +108,31 @@ public partial class PatientDashboard : UserControl
             var list = HsbaDAL.GetMyHsbaAsBenhnhan();
             dgvHsba.DataSource = list;
             _hsbaLoaded = true;
+            SetHsbaHeaders();
         }
         catch (Exception ex)
         {
             MessageBox.Show($"Lỗi tải hồ sơ bệnh án: {ex.Message}", "Lỗi",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+    }
+
+    private void SetHsbaHeaders()
+    {
+        var map = new Dictionary<string, string>
+        {
+            ["MaHSBA"]  = "Mã HSBA",
+            ["MaBN"]    = "Mã BN",
+            ["Ngay"]    = "Ngày khám",
+            ["ChanDoan"]= "Chẩn đoán",
+            ["DieuTri"] = "Điều trị",
+            ["MaBS"]    = "Bác sĩ",
+            ["MaKhoa"]  = "Khoa",
+            ["KetLuan"] = "Kết luận"
+        };
+        foreach (DataGridViewColumn col in dgvHsba.Columns)
+            if (map.TryGetValue(col.Name, out var header)) col.HeaderText = header;
+        if (dgvHsba.Columns["MaBN"] != null) dgvHsba.Columns["MaBN"].Visible = false;
     }
 
     private void LoadMyPrescriptions()
@@ -123,11 +142,25 @@ public partial class PatientDashboard : UserControl
             var list = PrescriptionDAL.GetMyPrescriptions();
             dgvPrescriptions.DataSource = list;
             _prescLoaded = true;
+            SetPrescriptionHeaders();
         }
         catch (Exception ex)
         {
             MessageBox.Show($"Lỗi tải đơn thuốc: {ex.Message}", "Lỗi",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+    }
+
+    private void SetPrescriptionHeaders()
+    {
+        var map = new Dictionary<string, string>
+        {
+            ["MaHSBA"]  = "Mã HSBA",
+            ["NgayDT"]  = "Ngày kê",
+            ["TenThuoc"]= "Tên thuốc",
+            ["LieuDung"]= "Liều dùng"
+        };
+        foreach (DataGridViewColumn col in dgvPrescriptions.Columns)
+            if (map.TryGetValue(col.Name, out var header)) col.HeaderText = header;
     }
 }

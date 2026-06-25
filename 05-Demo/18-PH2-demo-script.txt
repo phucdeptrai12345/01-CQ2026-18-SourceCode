@@ -1,0 +1,292 @@
+=========================================================
+  KỊCH BẢN DEMO - PHÂN HỆ 2
+  Nhóm 18 | CSC12001 | HK2 2025-2026
+  Ứng dụng: HospitalSystem.exe
+  Tổng thời gian ước tính: ~12-15 phút
+=========================================================
+
+CHUẨN BỊ TRƯỚC KHI BẤM RECORD
+-------------------------------------------------------
+1. Chạy sẵn SQL*Plus (thu nhỏ ở taskbar, không đóng):
+      sqlplus system/Welcome1#@localhost:1521/XEPDB1
+
+2. Đảm bảo đã chạy lại 05_vpd.sql (BN001 mới xem được HSBA):
+      SQL> @C:\...\03-Database\05_vpd.sql
+
+3. Mở HospitalSystem.exe → LoginForm hiện ra → để màn hình này.
+
+4. Chuẩn bị sẵn trong notepad các lệnh SQL sau (dùng ở YC3):
+      SELECT TABLE_NAME, POLICY_NAME, ENABLE FROM DBA_POLICIES WHERE OBJECT_OWNER='SYSTEM';
+      SELECT USERNAME, ACTION_NAME, OBJ_NAME, TIMESTAMP FROM DBA_AUDIT_TRAIL WHERE USERNAME IN ('BS001','KTV001') ORDER BY TIMESTAMP DESC FETCH FIRST 10 ROWS ONLY;
+      SELECT * FROM SYSTEM.AUDIT_LOG ORDER BY CHANGED_AT DESC FETCH FIRST 10 ROWS ONLY;
+
+5. Bật OBS / Xbox Game Bar (Win+G) → bắt đầu record.
+
+
+=========================================================
+  PHẦN 1 — YÊU CẦU 1: RBAC + VPD  (~6 phút)
+  [Tiêu đề màn hình: "Yêu cầu 1 – Phân quyền RBAC & VPD"]
+=========================================================
+
+-------------------------------
+SCENE 1 — Đăng nhập DPV001 (Điều phối viên - VPD)
+-------------------------------
+Mục đích: Chứng minh Điều phối viên thấy TOÀN BỘ dữ liệu, có quyền thêm/sửa.
+
+Bước 1: Trong LoginForm điền:
+         Username : DPV001
+         Password : Welcome1#
+         Host     : localhost
+         Port     : 1521
+         Service  : XEPDB1
+         → Nhấn ĐĂNG NHẬP
+
+Bước 2: MainForm mở ra → sidebar hiện "Cô viên Điều phối", header hiện "DPV001".
+
+Bước 3: Click "👤 Bệnh nhân" → CoordinatorDashboard tab Bệnh nhân:
+         → Nhìn vào DGV: thấy NHIỀU bệnh nhân (tất cả BN001..BN005...)
+         → Nói: "Điều phối viên xem được toàn bộ danh sách bệnh nhân."
+
+Bước 4: Click "➕ Thêm bệnh nhân" → PatientEditDialog mở ra:
+         Điền: Họ tên = Nguyễn Văn Test, CCCD = 012345678999, Phái = Nam
+         → Nhấn Lưu → thông báo thành công → DGV cập nhật.
+         → Nói: "Điều phối viên có quyền thêm bệnh nhân mới (TC#2)."
+
+Bước 5: Click "📁 Hồ sơ bệnh án" → tab HSBA:
+         → Thấy toàn bộ HSBA của mọi bệnh nhân.
+         → Click "➕ Tạo HSBA" → HsbaEditDialog → điền MaBN = BN001 → Lưu.
+         → Nói: "Điều phối viên tạo được HSBA mới, sau đó gán bác sĩ phụ trách."
+
+Bước 6: Chọn 1 HSBA vừa tạo → Click "Gán bác sĩ" → chọn BS001 → OK.
+         → Nói: "VPD sẽ tự đảm bảo BS001 chỉ thấy HSBA này của mình."
+
+Bước 7: Click "🔧 Phân công KTV" → tab Dịch vụ:
+         → Chọn 1 dịch vụ → Click "Phân công KTV" → chọn KTV001 → OK.
+         → Nói: "Điều phối viên phân công KTV001 thực hiện dịch vụ (TC#4)."
+
+Bước 8: Click "Đăng xuất" → xác nhận.
+
+-------------------------------
+SCENE 2 — Đăng nhập BS001 → BS002 (Bác sĩ - VPD)
+-------------------------------
+Mục đích: Chứng minh VPD lọc HSBA theo từng bác sĩ.
+
+Bước 9: LoginForm → Username: BS001 / Welcome1# → ĐĂNG NHẬP
+
+Bước 10: Click "📁 HSBA của tôi":
+          → Đọc số dòng ở góc dưới: "Hồ sơ của tôi: X"
+          → Nói: "BS001 chỉ thấy HSBA do chính mình phụ trách."
+
+Bước 11: Chọn 1 HSBA → Click "📝 Cập nhật chẩn đoán":
+          → DiagnosisEditDialog mở → sửa CHẨN ĐOÁN = "Viêm dạ dày cấp (đã cập nhật)" → Lưu.
+          → Nói: "BS001 cập nhật chẩn đoán — hành vi này sẽ bị ghi vết vào AUDIT_LOG."
+
+Bước 12: Click "💊 Đơn thuốc":
+          → Click "➕ Kê đơn thuốc" → điền Tên thuốc = Omeprazole, Liều dùng = 20mg x 2/ngày → Lưu.
+          → Nói: "Bác sĩ kê đơn thuốc cho bệnh nhân (TC#3.e)."
+
+Bước 13: Đăng xuất → Đăng nhập lại bằng BS002 / Welcome1#.
+
+Bước 14: Click "📁 HSBA của tôi":
+          → Đọc số dòng: "Hồ sơ của tôi: Y" (khác X của BS001).
+          → Nói: "BS002 KHÔNG thấy HSBA của BS001 — VPD lọc theo MÃBS (TC#3.a)."
+
+Bước 15: Đăng xuất.
+
+-------------------------------
+SCENE 3 — Đăng nhập KTV001 (Kỹ thuật viên - RBAC)
+-------------------------------
+Mục đích: Chứng minh KTV chỉ thấy dịch vụ được phân công.
+
+Bước 16: LoginForm → Username: KTV001 / Welcome1# → ĐĂNG NHẬP
+
+Bước 17: Dashboard hiện "Kỹ thuật viên" + danh sách dịch vụ:
+          → Nói: "KTV001 chỉ thấy dịch vụ được điều phối viên phân công cho mình (TC#4)."
+          → Đọc số dòng ở lblCount.
+
+Bước 18: Chọn 1 dịch vụ → Click "📝 Cập nhật kết quả":
+          → UpdateResultDialog mở → điền KẾT QUẢ = "Xét nghiệm máu: Bình thường" → Lưu.
+          → Nói: "KTV cập nhật kết quả — hành vi này được ghi vết vào audit log."
+
+Bước 19: Đăng xuất.
+
+-------------------------------
+SCENE 4 — Đăng nhập BN001 (Bệnh nhân - RBAC + VPD)
+-------------------------------
+Mục đích: Chứng minh bệnh nhân chỉ thấy thông tin của chính mình.
+
+Bước 20: LoginForm → Username: BN001 / Welcome1# → ĐĂNG NHẬP
+
+Bước 21: Tab "🧑 Thông tin cá nhân" hiện ra:
+          → Thấy MaBN, TenBN... là thông tin của BN001.
+          → Thay đổi địa chỉ: SoNha = "123A" → Click "Lưu thay đổi" → thành công.
+          → Nói: "Bệnh nhân chỉ xem và sửa thông tin của chính mình (TC#5)."
+
+Bước 22: Click tab "📁 Hồ sơ bệnh án":
+          → Thấy chỉ HSBA của BN001 (không thấy HSBA của BN002, BN003...).
+          → Nói: "VPD lọc HSBA: BN001 chỉ thấy hồ sơ của mình."
+
+Bước 23: Click tab "💊 Đơn thuốc":
+          → Thấy đơn thuốc Omeprazole vừa kê ở Scene 2.
+          → Nói: "VPD lọc đơn thuốc theo MÃHSBA thuộc về BN001."
+
+Bước 24: Đăng xuất.
+
+
+=========================================================
+  PHẦN 2 — YÊU CẦU 2: OLS THÔNG BÁO  (~2 phút)
+  [Tiêu đề màn hình: "Yêu cầu 2 – Oracle Label Security"]
+=========================================================
+
+Mục đích: Chứng minh OLS lọc thông báo theo nhãn (cấp bậc + khoa + cơ sở).
+
+Bước 25: LoginForm → Username: GD01 / password123 → ĐĂNG NHẬP
+          → Click "🔔 Thông báo" (sidebar).
+          → Thấy NHIỀU thông báo (Giám đốc đọc được tất cả — u1 trong đề).
+          → Đọc số dòng: "Thông báo hiển thị: N"
+          → Nói: "GD01 là Ban giám đốc, đọc được toàn bộ thông báo."
+
+Bước 26: Đăng xuất → Đăng nhập bằng KTV001 / Welcome1#.
+          → Click "🔔 Thông báo".
+          → Thấy ÍT thông báo hơn GD01 (chỉ thông báo gửi đến nhân viên + khoa tương ứng).
+          → Đọc số dòng: "Thông báo hiển thị: M" (M < N).
+          → Nói: "KTV001 là nhân viên, Oracle Label Security tự động lọc — chỉ thấy thông báo đúng nhãn."
+
+Bước 27: Đăng xuất.
+
+
+=========================================================
+  PHẦN 3 — YÊU CẦU 3: AUDIT  (~3 phút)
+  [Tiêu đề màn hình: "Yêu cầu 3 – Kiểm toán (Audit)"]
+=========================================================
+
+Mục đích: Đọc nhật ký ghi vết các thao tác đã làm ở YC1.
+
+--- 3A. Xem AUDIT_LOG tùy chỉnh (trigger-based) ---
+
+Bước 28: Đăng nhập SYSTEM → AdminForm → Click "📋 Nhật ký & Giám sát".
+
+Bước 29: Tab "📋 Nhật ký Audit":
+          → Click Refresh → DGV hiện các dòng audit.
+          → Chỉ vào dòng ghi cập nhật CHẨN ĐOÁN từ BS001 (CHANGED_AT gần nhất).
+          → Nói: "Trigger TRG_AUDIT_HSBA tự ghi vết khi BS001 cập nhật chẩn đoán (TC#3.c + YC3.b)."
+
+Bước 30: Tab "🔒 VPD Policies":
+          → Thấy danh sách policies: POLICY_BENHNHAN, POLICY_HSBA, POLICY_DONTHUOC...
+          → Nói: "Các VPD Policy đang hoạt động — Oracle tự động gắn WHERE predicate khi query."
+
+--- 3B. Xem Standard Audit + FGA qua SQL*Plus ---
+
+Bước 31: Alt+Tab sang SQL*Plus.
+
+Bước 32: Dán và chạy lệnh:
+      SELECT USERNAME, ACTION_NAME, OBJ_NAME, TIMESTAMP
+      FROM DBA_AUDIT_TRAIL
+      WHERE USERNAME IN ('BS001','KTV001')
+      ORDER BY TIMESTAMP DESC
+      FETCH FIRST 10 ROWS ONLY;
+      /
+      → Thấy các dòng audit action SELECT, UPDATE.
+      → Nói: "Standard Audit ghi nhận hành vi truy cập của BS001 và KTV001."
+
+Bước 33: Dán và chạy lệnh Unified Audit:
+      SELECT DBUSERNAME, ACTION_NAME, OBJECT_NAME, EVENT_TIMESTAMP
+      FROM UNIFIED_AUDIT_TRAIL
+      WHERE DBUSERNAME IN ('BS001','KTV001')
+      ORDER BY EVENT_TIMESTAMP DESC
+      FETCH FIRST 10 ROWS ONLY;
+      /
+      → Nói: "Unified Audit Trail ghi vết chi tiết hơn, bao gồm cả FGA."
+
+Bước 34: Chứng minh audit hành vi bất hợp pháp:
+      -- Thử cập nhật với user không có quyền:
+      CONN BN001/Welcome1#@localhost:1521/XEPDB1
+      UPDATE SYSTEM."HSBA" SET "CHẨNĐOÁN"='hack' WHERE ROWNUM=1;
+      /
+      → ORA-01031: insufficient privileges (hoặc 0 rows updated do VPD).
+      → CONN SYSTEM/Welcome1#@localhost:1521/XEPDB1
+      SELECT USERNAME, ACTION_NAME, RETURNCODE, TIMESTAMP
+      FROM DBA_AUDIT_TRAIL WHERE USERNAME='BN001' ORDER BY TIMESTAMP DESC FETCH FIRST 5 ROWS ONLY;
+      /
+      → RETURNCODE khác 0 → hành vi bất hợp pháp bị ghi nhận (YC3.c).
+      → Nói: "Oracle audit ghi nhận cả thao tác thất bại."
+
+Bước 35: Alt+Tab về AdminForm.
+
+
+=========================================================
+  PHẦN 4 — YÊU CẦU 4: SAO LƯU & PHỤC HỒI  (~2 phút)
+  [Tiêu đề màn hình: "Yêu cầu 4 – Backup & Restore"]
+=========================================================
+
+--- 4A. Xem Backup Jobs đã lên lịch ---
+
+Bước 36: Trong AdminForm → "📋 Nhật ký & Giám sát" → Tab "💾 Backup Jobs":
+          → Thấy JOB_DAILY_BACKUP (chạy 02:00 hàng ngày) + JOB_WEEKLY_BACKUP (Chủ nhật 01:00).
+          → Nói: "DBMS_SCHEDULER đã lên lịch backup tự động — JOB_DAILY_BACKUP và JOB_WEEKLY_BACKUP."
+
+--- 4B. Chứng minh Flashback (phục hồi dữ liệu) ---
+
+Bước 37: Alt+Tab sang SQL*Plus (SYSTEM):
+      -- Xem trạng thái trước khi xóa:
+      SELECT COUNT(*) FROM SYSTEM."ĐƠNTHUỐC";
+      /
+
+Bước 38: Xóa 1 dòng để giả lập sự cố:
+      DELETE FROM SYSTEM."ĐƠNTHUỐC" WHERE ROWNUM = 1;
+      COMMIT;
+      SELECT COUNT(*) FROM SYSTEM."ĐƠNTHUỐC";
+      /
+      → Số dòng giảm đi 1.
+      → Nói: "Giả lập sự cố: xóa nhầm 1 đơn thuốc."
+
+Bước 39: Phục hồi bằng Flashback Query:
+      SELECT COUNT(*) FROM SYSTEM."ĐƠNTHUỐC"
+      AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '2' MINUTE);
+      /
+      → Số dòng khôi phục = số cũ.
+      → Nói: "Flashback Query cho phép xem lại dữ liệu tại thời điểm 2 phút trước."
+
+Bước 40: Phục hồi dữ liệu thực tế:
+      INSERT INTO SYSTEM."ĐƠNTHUỐC"
+      SELECT * FROM SYSTEM."ĐƠNTHUỐC"
+      AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '2' MINUTE)
+      MINUS
+      SELECT * FROM SYSTEM."ĐƠNTHUỐC";
+      COMMIT;
+      SELECT COUNT(*) FROM SYSTEM."ĐƠNTHUỐC";
+      /
+      → Số dòng về lại như cũ.
+      → Nói: "Dữ liệu đã được phục hồi thành công từ Flashback (YC4)."
+
+Bước 41: Đóng SQL*Plus.
+
+
+=========================================================
+  KẾT THÚC VIDEO
+=========================================================
+
+Bước 42: Quay lại HospitalSystem.exe.
+          → Nói tóm tắt: "Phân hệ 2 đã minh họa đầy đủ 4 yêu cầu:
+             - YC1: Phân quyền RBAC (KTV, BN) và VPD (DPV, BS)
+             - YC2: OLS lọc thông báo theo nhãn cấp bậc/khoa/cơ sở
+             - YC3: Audit ghi vết Standard + FGA + Trigger tùy chỉnh
+             - YC4: Backup tự động (Scheduler) + Flashback phục hồi dữ liệu"
+          → Dừng record.
+
+
+=========================================================
+  TÀI KHOẢN THAM CHIẾU NHANH
+=========================================================
+
+  SYSTEM     / Welcome1#   → AdminForm (DBA) — dùng cho YC3 xem log
+  DPV001     / Welcome1#   → Điều phối viên (VPD)
+  BS001      / Welcome1#   → Bác sĩ (VPD - thấy HSBA của mình)
+  BS002      / Welcome1#   → Bác sĩ (VPD - thấy HSBA khác BS001)
+  KTV001     / Welcome1#   → Kỹ thuật viên (RBAC)
+  BN001      / Welcome1#   → Bệnh nhân (RBAC + VPD)
+  GD01       / password123 → Giám đốc (OLS - thấy tất cả thông báo)
+
+  Host: localhost | Port: 1521 | Service: XEPDB1
+
+=========================================================

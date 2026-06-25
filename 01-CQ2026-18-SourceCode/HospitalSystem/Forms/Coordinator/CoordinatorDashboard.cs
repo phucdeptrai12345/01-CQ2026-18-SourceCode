@@ -36,6 +36,7 @@ public partial class CoordinatorDashboard : UserControl
         {
             var list = PatientDAL.GetAllPatients();
             dgvPatients.DataSource = list;
+            SetBenhNhanHeaders();
             lblPatientCount.Text = $"Tổng số: {list.Count} bệnh nhân";
         }
         catch (Exception ex)
@@ -83,6 +84,7 @@ public partial class CoordinatorDashboard : UserControl
                 p.TenBN.ToLower().Contains(keyword) ||
                 p.CCCD.ToLower().Contains(keyword)).ToList();
             dgvPatients.DataSource = filtered;
+            SetBenhNhanHeaders();
             lblPatientCount.Text = $"Tìm thấy: {filtered.Count} bệnh nhân";
         }
         catch (Exception ex)
@@ -100,6 +102,7 @@ public partial class CoordinatorDashboard : UserControl
         {
             var list = HsbaDAL.GetAllHsba();
             dgvHsba.DataSource = list;
+            SetHsbaHeaders();
             lblHsbaCount.Text = $"Tổng số: {list.Count} hồ sơ";
         }
         catch (Exception ex)
@@ -145,6 +148,7 @@ public partial class CoordinatorDashboard : UserControl
                 list.AddRange(dvs);
             }
             dgvHsbaDv.DataSource = list;
+            SetHsbaDvHeaders();
             lblDvCount.Text = $"Tổng số: {list.Count} dịch vụ";
         }
         catch (Exception ex)
@@ -182,5 +186,58 @@ public partial class CoordinatorDashboard : UserControl
         TextRenderer.DrawText(g, tab.Text, e.Font ?? tabControl.Font, bounds,
             textColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         bgBrush.Dispose();
+    }
+
+    private void SetBenhNhanHeaders()
+    {
+        var map = new Dictionary<string, string>
+        {
+            ["MaBN"]         = "Mã BN",
+            ["TenBN"]        = "Họ tên",
+            ["Phai"]         = "Phái",
+            ["NgaySinh"]     = "Ngày sinh",
+            ["CCCD"]         = "CCCD",
+            ["SoNha"]        = "Số nhà",
+            ["TenDuong"]     = "Tên đường",
+            ["QuanHuyen"]    = "Quận/Huyện",
+            ["TinhTP"]       = "Tỉnh/TP",
+            ["TienSuBenh"]   = "Tiền sử bệnh",
+            ["TienSuBenhGD"] = "Tiền sử BN GĐ",
+            ["DiUngThuoc"]   = "Dị ứng thuốc",
+            ["OraUser"]      = "Tài khoản"
+        };
+        foreach (DataGridViewColumn col in dgvPatients.Columns)
+            if (map.TryGetValue(col.Name, out var h)) col.HeaderText = h;
+    }
+
+    private void SetHsbaHeaders()
+    {
+        var map = new Dictionary<string, string>
+        {
+            ["MaHSBA"]   = "Mã HSBA",
+            ["MaBN"]     = "Mã BN",
+            ["Ngay"]     = "Ngày khám",
+            ["ChanDoan"] = "Chẩn đoán",
+            ["DieuTri"]  = "Điều trị",
+            ["MaBS"]     = "Bác sĩ",
+            ["MaKhoa"]   = "Khoa",
+            ["KetLuan"]  = "Kết luận"
+        };
+        foreach (DataGridViewColumn col in dgvHsba.Columns)
+            if (map.TryGetValue(col.Name, out var h)) col.HeaderText = h;
+    }
+
+    private void SetHsbaDvHeaders()
+    {
+        var map = new Dictionary<string, string>
+        {
+            ["MaHSBA"] = "Mã HSBA",
+            ["LoaiDV"]  = "Loại dịch vụ",
+            ["NgayDV"]  = "Ngày DV",
+            ["MaKTV"]   = "Mã KTV",
+            ["KetQua"]  = "Kết quả"
+        };
+        foreach (DataGridViewColumn col in dgvHsbaDv.Columns)
+            if (map.TryGetValue(col.Name, out var h)) col.HeaderText = h;
     }
 }

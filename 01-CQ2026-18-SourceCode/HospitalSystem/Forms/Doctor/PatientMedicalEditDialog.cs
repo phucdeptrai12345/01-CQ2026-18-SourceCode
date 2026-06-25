@@ -32,7 +32,7 @@ namespace HospitalSystem.Forms.Doctor
                     _bn.TienSuBenh   = txtTienSuBenh.Text.Trim();
                     _bn.TienSuBenhGD = txtTienSuBenhGD.Text.Trim();
                     _bn.DiUngThuoc   = txtDiUngThuoc.Text.Trim();
-                    PatientDAL.UpdatePatient(_bn);
+                    PatientDAL.UpdateMedicalInfo(_bn);
                     MessageBox.Show("Cập nhật tiền sử bệnh thành công!", "Thành công",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }

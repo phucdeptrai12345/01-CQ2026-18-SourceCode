@@ -30,6 +30,7 @@ public partial class DoctorDashboard : UserControl
         {
             var list = HsbaDAL.GetMyHsba();
             dgvHsba.DataSource = list;
+            SetHsbaHeaders();
             lblHsbaCount.Text = $"Hồ sơ của tôi: {list.Count}";
         }
         catch (Exception ex)
@@ -48,6 +49,7 @@ public partial class DoctorDashboard : UserControl
                 var hsba = (Hsba)dgvHsba.SelectedRows[0].DataBoundItem;
                 var services = HsbaDvDAL.GetServicesByHsba(hsba.MaHSBA);
                 dgvServices.DataSource = services;
+                SetHsbaDvHeaders();
             }
         }
         catch (Exception ex)
@@ -66,6 +68,7 @@ public partial class DoctorDashboard : UserControl
                 var hsba = (Hsba)dgvHsba.SelectedRows[0].DataBoundItem;
                 var presc = PrescriptionDAL.GetByHsba(hsba.MaHSBA);
                 dgvPrescriptions.DataSource = presc;
+                SetDonThuocHeaders();
             }
         }
         catch (Exception ex)
@@ -73,6 +76,50 @@ public partial class DoctorDashboard : UserControl
             MessageBox.Show($"Lỗi tải đơn thuốc: {ex.Message}", "Lỗi",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+    }
+
+    private void SetHsbaHeaders()
+    {
+        var map = new Dictionary<string, string>
+        {
+            ["MaHSBA"]   = "Mã HSBA",
+            ["MaBN"]     = "Mã BN",
+            ["Ngay"]     = "Ngày khám",
+            ["ChanDoan"] = "Chẩn đoán",
+            ["DieuTri"]  = "Điều trị",
+            ["MaBS"]     = "Bác sĩ",
+            ["MaKhoa"]   = "Khoa",
+            ["KetLuan"]  = "Kết luận"
+        };
+        foreach (DataGridViewColumn col in dgvHsba.Columns)
+            if (map.TryGetValue(col.Name, out var h)) col.HeaderText = h;
+    }
+
+    private void SetHsbaDvHeaders()
+    {
+        var map = new Dictionary<string, string>
+        {
+            ["MaHSBA"] = "Mã HSBA",
+            ["LoaiDV"]  = "Loại dịch vụ",
+            ["NgayDV"]  = "Ngày DV",
+            ["MaKTV"]   = "Mã KTV",
+            ["KetQua"]  = "Kết quả"
+        };
+        foreach (DataGridViewColumn col in dgvServices.Columns)
+            if (map.TryGetValue(col.Name, out var h)) col.HeaderText = h;
+    }
+
+    private void SetDonThuocHeaders()
+    {
+        var map = new Dictionary<string, string>
+        {
+            ["MaHSBA"]   = "Mã HSBA",
+            ["NgayDT"]   = "Ngày kê",
+            ["TenThuoc"] = "Tên thuốc",
+            ["LieuDung"] = "Liều dùng"
+        };
+        foreach (DataGridViewColumn col in dgvPrescriptions.Columns)
+            if (map.TryGetValue(col.Name, out var h)) col.HeaderText = h;
     }
 
     private void btnViewDetail_Click(object sender, EventArgs e)

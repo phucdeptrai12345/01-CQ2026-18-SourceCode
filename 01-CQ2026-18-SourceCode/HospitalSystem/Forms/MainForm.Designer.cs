@@ -37,9 +37,9 @@ partial class MainForm
         pnlHeader = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 60,
+            Height = 64,
             BackColor = Color.FromArgb(22, 33, 62),
-            Padding = new Padding(10)
+            Padding = new Padding(10, 0, 10, 0)
         };
 
         // App title trong header

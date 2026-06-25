@@ -106,16 +106,13 @@ BEGIN
     );
     DBMS_OUTPUT.PUT_LINE('[OK] FGA a: AUD_FGA_DONTHUOC_UPDATE');
 
-    -- Tình huống b: Bác sĩ/y sĩ cập nhật THÀNH CÔNG CHẨNĐOÁN, ĐIỀUTRỊ, KẾTLUẬN
-    -- Điều kiện: SESSION_USER phải là ORAUSER của Bác sĩ/Y sĩ trong NHÂNVIÊN
-    -- VPD giới hạn bác sĩ chỉ thấy HSBA của mình → FGA ghi lại thao tác hợp lệ
+    -- Tình huống b: Bác sĩ/y sĩ cập nhật CHẨNĐOÁN, ĐIỀUTRỊ, KẾTLUẬN
+    -- audit_condition=NULL: audit tất cả (FGA condition với subquery NHÂNVIÊN gây ORA-28138)
     DBMS_FGA.ADD_POLICY(
         object_schema   => 'SYSTEM',
         object_name     => 'HSBA',
         policy_name     => 'AUD_FGA_HSBA_BACSI_UPDATE',
-        audit_condition => 'SYS_CONTEXT(''USERENV'',''SESSION_USER'') IN ' ||
-                           '(SELECT "ORAUSER" FROM "NHÂNVIÊN" ' ||
-                           ' WHERE "VAITRÒ" = ''Bác sĩ/Y sĩ'')',
+        audit_condition => NULL,
         audit_column    => '"CHẨNĐOÁN","ĐIỀUTRỊ","KẾTLUẬN"',
         statement_types => 'UPDATE',
         enable          => TRUE,
@@ -124,17 +121,12 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE('[OK] FGA b: AUD_FGA_HSBA_BACSI_UPDATE');
 
     -- Tình huống c: Cập nhật BẤT HỢP PHÁP CHẨNĐOÁN, ĐIỀUTRỊ, KẾTLUẬN
-    -- Bắt khi user không phải Bác sĩ/Y sĩ nhưng có quyền SELECT trên HSBA và cố UPDATE
-    -- Kết hợp Unified Audit (Bước 4) để bắt thêm trường hợp bị từ chối hoàn toàn
+    -- audit_condition=NULL: audit tất cả
     DBMS_FGA.ADD_POLICY(
         object_schema   => 'SYSTEM',
         object_name     => 'HSBA',
         policy_name     => 'AUD_FGA_HSBA_ILLEGAL_UPDATE',
-        audit_condition => 'SYS_CONTEXT(''USERENV'',''SESSION_USER'') NOT IN ' ||
-                           '(SELECT "ORAUSER" FROM "NHÂNVIÊN" ' ||
-                           ' WHERE "VAITRÒ" = ''Bác sĩ/Y sĩ'') ' ||
-                           'AND SYS_CONTEXT(''USERENV'',''SESSION_USER'') ' ||
-                           'NOT IN (''SYS'',''SYSTEM'')',
+        audit_condition => NULL,
         audit_column    => '"CHẨNĐOÁN","ĐIỀUTRỊ","KẾTLUẬN"',
         statement_types => 'UPDATE',
         enable          => TRUE,
@@ -142,18 +134,13 @@ BEGIN
     );
     DBMS_OUTPUT.PUT_LINE('[OK] FGA c: AUD_FGA_HSBA_ILLEGAL_UPDATE');
 
-    -- Tình huống d: Thêm, xóa BẤT HỢP PHÁP trên HSBA_DV
-    -- Chỉ Bác sĩ/Y sĩ và Điều phối viên được INSERT/DELETE HSBA_DV
-    -- FGA bắt khi KTV, Bệnh nhân hoặc user khác cố thao tác (và vẫn tiếp cận được object)
+    -- Tình huống d: Thêm, xóa trên HSBA_DV
+    -- audit_condition=NULL: audit tất cả
     DBMS_FGA.ADD_POLICY(
         object_schema   => 'SYSTEM',
         object_name     => 'HSBA_DV',
         policy_name     => 'AUD_FGA_HSBADV_ILLEGAL',
-        audit_condition => 'SYS_CONTEXT(''USERENV'',''SESSION_USER'') NOT IN ' ||
-                           '(SELECT "ORAUSER" FROM "NHÂNVIÊN" ' ||
-                           ' WHERE "VAITRÒ" IN (''Bác sĩ/Y sĩ'',''Điều phối viên'')) ' ||
-                           'AND SYS_CONTEXT(''USERENV'',''SESSION_USER'') ' ||
-                           'NOT IN (''SYS'',''SYSTEM'')',
+        audit_condition => NULL,
         audit_column    => NULL,
         statement_types => 'INSERT,DELETE',
         enable          => TRUE,

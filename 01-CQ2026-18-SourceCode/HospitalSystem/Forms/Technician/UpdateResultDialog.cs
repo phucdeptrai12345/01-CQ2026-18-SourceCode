@@ -23,11 +23,18 @@ namespace HospitalSystem.Forms.Technician
             btnCancel = new Button { Text = "Hủy", Top = 100, Left = 220, DialogResult = DialogResult.Cancel };
 
             btnOK.Click += (s, e) => {
-                _dv.KetQua = txtKetQua.Text;
-                if(HsbaDvDAL.UpdateResult(_dv)) {
-                    MessageBox.Show("Cập nhật thành công!");
-                } else {
-                    MessageBox.Show("Cập nhật thất bại!");
+                try
+                {
+                    _dv.KetQua = txtKetQua.Text;
+                    HsbaDvDAL.UpdateResult(_dv);
+                    MessageBox.Show("Cập nhật kết quả thành công!", "Thành công",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi: {ex.Message}", "Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    DialogResult = DialogResult.None;
                 }
             };
 

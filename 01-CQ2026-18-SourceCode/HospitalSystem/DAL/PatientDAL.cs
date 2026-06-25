@@ -101,6 +101,30 @@ public static class PatientDAL
         }
     }
 
+    /// <summary>Bác sĩ cập nhật tiền sử bệnh / dị ứng (chỉ 3 cột ROLE_BACSI được phép)</summary>
+    public static bool UpdateMedicalInfo(BenhNhan bn)
+    {
+        try
+        {
+            var conn = OracleHelper.GetConnection();
+            using var cmd = new OracleCommand(
+                $"UPDATE {TABLE} SET \"TIỀNSỬBỆNH\"=:tienSuBenh, " +
+                "\"TIỀNSỬBỆNHGĐ\"=:tienSuBenhGD, \"DỊỨNGTHUỐC\"=:diUngThuoc " +
+                "WHERE \"MÃBN\"=:maBN", conn);
+            cmd.Parameters.Add(new OracleParameter("tienSuBenh",   (object?)bn.TienSuBenh   ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("tienSuBenhGD", (object?)bn.TienSuBenhGD ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("diUngThuoc",   (object?)bn.DiUngThuoc   ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("maBN", bn.MaBN));
+            cmd.ExecuteNonQuery();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PatientDAL] UpdateMedicalInfo: {ex.Message}");
+            throw;
+        }
+    }
+
     /// <summary>Cập nhật toàn bộ thông tin bệnh nhân (Điều phối viên)</summary>
     public static bool UpdatePatient(BenhNhan bn)
     {

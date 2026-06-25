@@ -69,30 +69,38 @@ public static class AuthService
 
             var conn = OracleHelper.GetConnection();
 
-            // Bước 1: Tìm trong bảng NHÂNVIÊN (dùng quoted identifiers)
-            using (var cmd = new OracleCommand(
-                "SELECT \"VAITRÒ\", \"MÃNV\", \"HỌTÊN\" FROM \"NHÂNVIÊN\" " +
-                "WHERE \"ORAUSER\" = SYS_CONTEXT('USERENV','SESSION_USER')", conn))
+            // Bước 1: Tìm trong bảng NHÂNVIÊN
+            // BN không có SELECT trên NHÂNVIÊN → ORA-00942, bỏ qua và thử BỆNHNHÂN
+            try
             {
-                using var reader = cmd.ExecuteReader();
-                if (reader.Read())
+                using (var cmd = new OracleCommand(
+                    "SELECT \"VAITRÒ\", \"MÃNV\", \"HỌTÊN\" FROM SYSTEM.\"NHÂNVIÊN\" " +
+                    "WHERE \"ORAUSER\" = SYS_CONTEXT('USERENV','SESSION_USER')", conn))
                 {
-                    var vaiTro = reader["VAITRÒ"]?.ToString() ?? "";
-                    var session = new UserSession
+                    using var reader = cmd.ExecuteReader();
+                    if (reader.Read())
                     {
-                        UserId      = reader["MÃNV"]?.ToString() ?? "",
-                        DisplayName = reader["HỌTÊN"]?.ToString() ?? "",
-                        OraUser     = OracleHelper.CurrentUser ?? "",
-                        Role        = ParseNhanVienRole(vaiTro)
-                    };
-                    CurrentSession = session;
-                    return session;
+                        var vaiTro = reader["VAITRÒ"]?.ToString() ?? "";
+                        var session = new UserSession
+                        {
+                            UserId      = reader["MÃNV"]?.ToString() ?? "",
+                            DisplayName = reader["HỌTÊN"]?.ToString() ?? "",
+                            OraUser     = OracleHelper.CurrentUser ?? "",
+                            Role        = ParseNhanVienRole(vaiTro)
+                        };
+                        CurrentSession = session;
+                        return session;
+                    }
                 }
+            }
+            catch (Oracle.ManagedDataAccess.Client.OracleException)
+            {
+                // User không có quyền đọc NHÂNVIÊN (vd: bệnh nhân) → tiếp tục kiểm tra BỆNHNHÂN
             }
 
             // Bước 2: Không có trong NHÂNVIÊN → thử bảng BỆNHNHÂN
             using (var cmd2 = new OracleCommand(
-                "SELECT \"MÃBN\", \"TÊNBN\" FROM \"BỆNHNHÂN\" " +
+                "SELECT \"MÃBN\", \"TÊNBN\" FROM SYSTEM.\"BỆNHNHÂN\" " +
                 "WHERE \"ORAUSER\" = SYS_CONTEXT('USERENV','SESSION_USER')", conn))
             {
                 using var reader2 = cmd2.ExecuteReader();

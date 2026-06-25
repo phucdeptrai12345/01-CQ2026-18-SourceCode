@@ -324,6 +324,7 @@ GRANT SELECT ON SYSTEM."THÔNGBÁO" TO ROLE_BACSI;
 -- =====================================================================
 PROMPT --- Grant quyền ROLE_KTHUATVIEN ---.
 
+GRANT SELECT ON SYSTEM."NHÂNVIÊN"   TO ROLE_KTHUATVIEN;
 GRANT SELECT ON SYSTEM.VW_HSBA_DV_KTV TO ROLE_KTHUATVIEN;
 GRANT UPDATE ("KẾTQUẢ") ON SYSTEM."HSBA_DV" TO ROLE_KTHUATVIEN;
 GRANT SELECT ON SYSTEM."THÔNGBÁO" TO ROLE_KTHUATVIEN;
@@ -374,6 +375,39 @@ GRANT ROLE_BENHNHAN TO BN002;
 GRANT ROLE_BENHNHAN TO BN003;
 GRANT ROLE_BENHNHAN TO BN004;
 GRANT ROLE_BENHNHAN TO BN005;
+
+-- =====================================================================
+-- BƯỚC 10.5: DIRECT COLUMN-LEVEL GRANTS TO INDIVIDUAL USERS
+-- Oracle column-level UPDATE qua role không có hiệu lực khi VPD active.
+-- Cần grant trực tiếp đến từng user để đảm bảo quyền được áp dụng.
+-- =====================================================================
+PROMPT --- Direct column-level grants for BS users ---.
+GRANT UPDATE ("CHẨNĐOÁN","ĐIỀUTRỊ","KẾTLUẬN") ON SYSTEM."HSBA" TO BS001;
+GRANT UPDATE ("CHẨNĐOÁN","ĐIỀUTRỊ","KẾTLUẬN") ON SYSTEM."HSBA" TO BS002;
+GRANT UPDATE ("CHẨNĐOÁN","ĐIỀUTRỊ","KẾTLUẬN") ON SYSTEM."HSBA" TO BS003;
+GRANT UPDATE ("TIỀNSỬBỆNH","TIỀNSỬBỆNHGĐ","DỊỨNGTHUỐC") ON SYSTEM."BỆNHNHÂN" TO BS001;
+GRANT UPDATE ("TIỀNSỬBỆNH","TIỀNSỬBỆNHGĐ","DỊỨNGTHUỐC") ON SYSTEM."BỆNHNHÂN" TO BS002;
+GRANT UPDATE ("TIỀNSỬBỆNH","TIỀNSỬBỆNHGĐ","DỊỨNGTHUỐC") ON SYSTEM."BỆNHNHÂN" TO BS003;
+
+PROMPT --- Direct grants for KTV users ---.
+GRANT UPDATE ("KẾTQUẢ") ON SYSTEM."HSBA_DV" TO KTV001;
+GRANT UPDATE ("KẾTQUẢ") ON SYSTEM."HSBA_DV" TO KTV002;
+-- Table-level UPDATE + SELECT needed: VPD predicate evaluation requires SELECT on base table
+GRANT UPDATE  ON SYSTEM."HSBA_DV" TO KTV001;
+GRANT UPDATE  ON SYSTEM."HSBA_DV" TO KTV002;
+GRANT SELECT  ON SYSTEM."HSBA_DV" TO KTV001;
+GRANT SELECT  ON SYSTEM."HSBA_DV" TO KTV002;
+
+PROMPT --- Direct column-level grants for DPV users ---.
+GRANT UPDATE ("MÃKTV") ON SYSTEM."HSBA_DV" TO DPV001;
+GRANT UPDATE ("MÃKTV") ON SYSTEM."HSBA_DV" TO DPV002;
+
+PROMPT --- Direct column-level grants for BN users ---.
+GRANT UPDATE ("SỐNHÀ","TÊNĐƯỜNG","QUẬNHUYỆN","TỈNHTP","TIỀNSỬBỆNH","TIỀNSỬBỆNHGĐ","DỊỨNGTHUỐC") ON SYSTEM."BỆNHNHÂN" TO BN001;
+GRANT UPDATE ("SỐNHÀ","TÊNĐƯỜNG","QUẬNHUYỆN","TỈNHTP","TIỀNSỬBỆNH","TIỀNSỬBỆNHGĐ","DỊỨNGTHUỐC") ON SYSTEM."BỆNHNHÂN" TO BN002;
+GRANT UPDATE ("SỐNHÀ","TÊNĐƯỜNG","QUẬNHUYỆN","TỈNHTP","TIỀNSỬBỆNH","TIỀNSỬBỆNHGĐ","DỊỨNGTHUỐC") ON SYSTEM."BỆNHNHÂN" TO BN003;
+GRANT UPDATE ("SỐNHÀ","TÊNĐƯỜNG","QUẬNHUYỆN","TỈNHTP","TIỀNSỬBỆNH","TIỀNSỬBỆNHGĐ","DỊỨNGTHUỐC") ON SYSTEM."BỆNHNHÂN" TO BN004;
+GRANT UPDATE ("SỐNHÀ","TÊNĐƯỜNG","QUẬNHUYỆN","TỈNHTP","TIỀNSỬBỆNH","TIỀNSỬBỆNHGĐ","DỊỨNGTHUỐC") ON SYSTEM."BỆNHNHÂN" TO BN005;
 
 -- =====================================================================
 -- BƯỚC 11: ĐẶT DEFAULT ROLE (kích hoạt tự động khi login)

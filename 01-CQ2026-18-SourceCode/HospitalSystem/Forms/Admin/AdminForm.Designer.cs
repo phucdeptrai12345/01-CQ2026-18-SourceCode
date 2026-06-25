@@ -5,7 +5,7 @@ partial class AdminForm
     private System.ComponentModel.IContainer components = null;
     private Panel menuPanel, mainPanel;
     private Label lblTitle;
-    private Button btnUserManage, btnViewInfo, btnPrivileges, btnRevoke, btnLogout;
+    private Button btnUserManage, btnViewInfo, btnPrivileges, btnRevoke, btnAuditLog, btnLogout;
 
     protected override void Dispose(bool disposing)
     {
@@ -22,6 +22,7 @@ partial class AdminForm
         btnViewInfo = new Button();
         btnPrivileges = new Button();
         btnRevoke = new Button();
+        btnAuditLog = new Button();
         btnLogout = new Button();
         menuPanel.SuspendLayout();
         SuspendLayout();
@@ -29,7 +30,7 @@ partial class AdminForm
         menuPanel.BackColor = Color.FromArgb(30, 30, 58);
         menuPanel.Dock = DockStyle.Left;
         menuPanel.Width = 220;
-        menuPanel.Controls.AddRange(new Control[] { btnLogout, btnRevoke, btnPrivileges, btnViewInfo, btnUserManage, lblTitle });
+        menuPanel.Controls.AddRange(new Control[] { btnLogout, btnAuditLog, btnRevoke, btnPrivileges, btnViewInfo, btnUserManage, lblTitle });
 
         lblTitle.Text = "QUẢN TRỊ\nORACLE DB";
         lblTitle.Font = new Font("Segoe UI", 13f, FontStyle.Bold);
@@ -38,7 +39,7 @@ partial class AdminForm
         lblTitle.Dock = DockStyle.Top;
         lblTitle.Height = 80;
 
-        foreach (var btn in new[] { btnUserManage, btnViewInfo, btnPrivileges, btnRevoke })
+        foreach (var btn in new[] { btnUserManage, btnViewInfo, btnPrivileges, btnRevoke, btnAuditLog })
         {
             btn.Dock = DockStyle.Top;
             btn.Height = 55;
@@ -57,6 +58,10 @@ partial class AdminForm
         btnPrivileges.Click += btnPrivileges_Click;
         btnRevoke.Text = "  Thu hồi quyền";
         btnRevoke.Click += btnRevoke_Click;
+
+        btnAuditLog.Text = "  📋 Nhật ký & Giám sát";
+        btnAuditLog.BackColor = Color.FromArgb(21, 101, 60);
+        btnAuditLog.Click += btnAuditLog_Click;
 
         btnLogout.Text = "Đăng xuất";
         btnLogout.Dock = DockStyle.Bottom;

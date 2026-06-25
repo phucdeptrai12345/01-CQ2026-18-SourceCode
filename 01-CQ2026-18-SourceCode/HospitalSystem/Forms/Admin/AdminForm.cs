@@ -6,6 +6,7 @@ public partial class AdminForm : Form
 {
     public AdminForm() { InitializeComponent(); }
 
+    private void btnAuditLog_Click(object sender, EventArgs e) => LoadPanel(new Form_AuditLog());
     private void btnUserManage_Click(object sender, EventArgs e) => LoadPanel(new Form_UserRole());
     private void btnViewInfo_Click(object sender, EventArgs e) => LoadPanel(new Form_ViewInfo());
     private void btnPrivileges_Click(object sender, EventArgs e) => LoadPanel(new Form_Privileges());

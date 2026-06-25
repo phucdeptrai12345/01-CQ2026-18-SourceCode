@@ -39,12 +39,15 @@ partial class DoctorDashboard
         btnUpdateDiagnosis = new Button();
         btnUpdatePatientMedical = new Button();
         lblHsbaCount = new Label();
+        dgvHsba = CreateDGV();
         tabServices = new TabPage();
+        dgvServices = CreateDGV();
         tabPrescriptions = new TabPage();
         pnlPresToolbar = new Panel();
         btnAddPrescription = new Button();
         btnEditPrescription = new Button();
         btnDeletePrescription = new Button();
+        dgvPrescriptions = CreateDGV();
         tabControl.SuspendLayout();
         tabHsba.SuspendLayout();
         pnlHsbaToolbar.SuspendLayout();
@@ -67,10 +70,27 @@ partial class DoctorDashboard
         tabControl.Size = new Size(1110, 686);
         tabControl.TabIndex = 0;
         tabControl.DrawItem += TabControl_DrawItem;
-        // 
+        //
+        // dgvHsba
+        //
+        dgvHsba.Dock = DockStyle.Fill;
+        dgvHsba.Name = "dgvHsba";
+        dgvHsba.SelectionChanged += dgvHsba_SelectionChanged;
+        //
+        // dgvServices
+        //
+        dgvServices.Dock = DockStyle.Fill;
+        dgvServices.Name = "dgvServices";
+        //
+        // dgvPrescriptions
+        //
+        dgvPrescriptions.Dock = DockStyle.Fill;
+        dgvPrescriptions.Name = "dgvPrescriptions";
+        //
         // tabHsba
-        // 
+        //
         tabHsba.BackColor = Color.FromArgb(15, 15, 26);
+        tabHsba.Controls.Add(dgvHsba);
         tabHsba.Controls.Add(pnlHsbaToolbar);
         tabHsba.Location = new Point(4, 36);
         tabHsba.Name = "tabHsba";
@@ -148,6 +168,7 @@ partial class DoctorDashboard
         // tabServices
         // 
         tabServices.BackColor = Color.FromArgb(15, 15, 26);
+        tabServices.Controls.Add(dgvServices);
         tabServices.Location = new Point(4, 36);
         tabServices.Name = "tabServices";
         tabServices.Size = new Size(1102, 646);
@@ -157,6 +178,7 @@ partial class DoctorDashboard
         // tabPrescriptions
         // 
         tabPrescriptions.BackColor = Color.FromArgb(15, 15, 26);
+        tabPrescriptions.Controls.Add(dgvPrescriptions);
         tabPrescriptions.Controls.Add(pnlPresToolbar);
         tabPrescriptions.Location = new Point(4, 36);
         tabPrescriptions.Name = "tabPrescriptions";

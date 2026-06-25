@@ -112,7 +112,8 @@ CREATE OR REPLACE PACKAGE BODY VPD_BACSI_PKG AS
         IF v_user IN ('SYSTEM', 'SYS') THEN
           RETURN NULL; -- NULL = không lọc = thấy tất cả
         END IF;
-        RETURN '1=0'; -- Không phải nhân viên → không thấy gì
+        -- Bệnh nhân: chỉ thấy HSBA của chính mình
+        RETURN '"MÃBN" = (SELECT "MÃBN" FROM SYSTEM."BỆNHNHÂN" WHERE "ORAUSER" = SYS_CONTEXT(''USERENV'',''SESSION_USER''))';
     END;
 
     -- Nếu là Bác sĩ/Y sĩ → lọc theo MÃBS
@@ -212,7 +213,9 @@ CREATE OR REPLACE PACKAGE BODY VPD_BACSI_PKG AS
       WHERE "ORAUSER" = v_user;
     EXCEPTION
       WHEN NO_DATA_FOUND THEN
-        RETURN '1=0';
+        IF v_user IN ('SYSTEM', 'SYS') THEN RETURN NULL; END IF;
+        -- Bệnh nhân: chỉ thấy đơn thuốc của HSBA mình
+        RETURN '"MÃHSBA" IN (SELECT h."MÃHSBA" FROM SYSTEM."HSBA" h JOIN SYSTEM."BỆNHNHÂN" b ON b."MÃBN" = h."MÃBN" WHERE b."ORAUSER" = SYS_CONTEXT(''USERENV'',''SESSION_USER''))';
     END;
 
     IF v_vaitro = N'Bác sĩ/Y sĩ' THEN
@@ -425,7 +428,8 @@ CREATE OR REPLACE PACKAGE BODY VPD_BACSI_PKG AS
     EXCEPTION
       WHEN NO_DATA_FOUND THEN
         IF v_user IN ('SYSTEM', 'SYS') THEN RETURN NULL; END IF;
-        RETURN '1=0';
+        -- Bệnh nhân: chỉ thấy HSBA của chính mình
+        RETURN '"MÃBN" = (SELECT "MÃBN" FROM SYSTEM."BỆNHNHÂN" WHERE "ORAUSER" = SYS_CONTEXT(''USERENV'',''SESSION_USER''))';
     END;
     IF v_vaitro = N'Bác sĩ/Y sĩ' THEN
       v_predicate :=
@@ -494,7 +498,9 @@ CREATE OR REPLACE PACKAGE BODY VPD_BACSI_PKG AS
       FROM "NHÂNVIÊN"
       WHERE "ORAUSER" = v_user;
     EXCEPTION
-      WHEN NO_DATA_FOUND THEN RETURN '1=0';
+      WHEN NO_DATA_FOUND THEN
+        IF v_user IN ('SYSTEM', 'SYS') THEN RETURN NULL; END IF;
+        RETURN '"MÃHSBA" IN (SELECT h."MÃHSBA" FROM SYSTEM."HSBA" h JOIN SYSTEM."BỆNHNHÂN" b ON b."MÃBN" = h."MÃBN" WHERE b."ORAUSER" = SYS_CONTEXT(''USERENV'',''SESSION_USER''))';
     END;
     IF v_vaitro = N'Bác sĩ/Y sĩ' THEN
       v_predicate :=
@@ -749,51 +755,6 @@ END TRG_AUDIT_DONTHUOC;
 /
 
 PROMPT --- Đã tạo 3 audit triggers ---.
-
--- =====================================================================
--- VPD POLICY CHO TC#5: NHÂN VIÊN XEM THÔNG TIN CHÍNH MÌNH
--- =====================================================================
-PROMPT --- Áp dụng VPD Policy TC#5 (Nhân viên) ---.
-
-CREATE OR REPLACE FUNCTION policy_nhanvien_chinhminh(
-    schema_name IN VARCHAR2,
-    table_name  IN VARCHAR2
-) RETURN VARCHAR2 IS
-    v_user VARCHAR2(100);
-BEGIN
-    v_user := SYS_CONTEXT('USERENV', 'SESSION_USER');
-    -- Quản trị viên (DBA/SYSTEM) có thể xem toàn bộ dữ liệu
-    IF v_user IN ('SYSTEM', 'SYS', 'DBA_USER') THEN
-        RETURN NULL;
-    END IF;
-    -- Lọc dòng của chính nhân viên đó thông qua cột ORAUSER
-    RETURN '"ORAUSER" = ''' || v_user || '''';
-END policy_nhanvien_chinhminh;
-/
-
-BEGIN
-  DBMS_RLS.DROP_POLICY(
-    object_schema => 'SYSTEM',
-    object_name   => '"NHÂNVIÊN"',
-    policy_name   => 'POL_TC5_NHANVIEN_CHINHMINH'
-  );
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-
-BEGIN
-  DBMS_RLS.ADD_POLICY(
-    object_schema   => 'SYSTEM',
-    object_name     => '"NHÂNVIÊN"',
-    policy_name     => 'POL_TC5_NHANVIEN_CHINHMINH',
-    function_schema => 'SYSTEM',
-    policy_function => 'policy_nhanvien_chinhminh',
-    statement_types => 'SELECT,UPDATE',
-    update_check    => FALSE,
-    enable          => TRUE
-  );
-END;
-/
 
 COMMIT;
 

@@ -18,6 +18,7 @@ public partial class TechnicianDashboard : UserControl
         {
             var list = HsbaDvDAL.GetMyServices();
             dgvServices.DataSource = list;
+            SetHsbaDvHeaders(dgvServices);
             lblCount.Text = $"Dịch vụ được giao: {list.Count}";
         }
         catch (Exception ex)
@@ -25,6 +26,20 @@ public partial class TechnicianDashboard : UserControl
             MessageBox.Show($"Lỗi tải dữ liệu: {ex.Message}", "Lỗi",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+    }
+
+    private static void SetHsbaDvHeaders(DataGridView dgv)
+    {
+        var map = new Dictionary<string, string>
+        {
+            ["MaHSBA"] = "Mã HSBA",
+            ["LoaiDV"]  = "Loại dịch vụ",
+            ["NgayDV"]  = "Ngày DV",
+            ["MaKTV"]   = "Mã KTV",
+            ["KetQua"]  = "Kết quả"
+        };
+        foreach (DataGridViewColumn col in dgv.Columns)
+            if (map.TryGetValue(col.Name, out var h)) col.HeaderText = h;
     }
 
     private void btnUpdateResult_Click(object sender, EventArgs e)

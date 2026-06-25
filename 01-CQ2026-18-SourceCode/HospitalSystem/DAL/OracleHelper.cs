@@ -15,7 +15,7 @@ public static class OracleHelper
     public static string BuildConnectionString(string username, string password,
         string host = "localhost", int port = 1521, string service = "XEPDB1")
     {
-        var cs = $"User Id={username};Password={password};Data Source={host}:{port}/{service};";
+        var cs = $"User Id={username};Password={password};Data Source={host}:{port}/{service};Pooling=false;";
         // SYS cần SYSDBA; SYSTEM đăng nhập bình thường để chạy các script/app nghiệp vụ.
         if (username.Equals("SYS", StringComparison.OrdinalIgnoreCase))
             cs += "DBA Privilege=SYSDBA;";
