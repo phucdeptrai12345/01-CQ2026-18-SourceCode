@@ -32,6 +32,8 @@ public partial class DoctorDashboard : UserControl
             dgvHsba.DataSource = list;
             SetHsbaHeaders();
             lblHsbaCount.Text = $"Hồ sơ của tôi: {list.Count}";
+            if (dgvHsba.Rows.Count > 0)
+                dgvHsba.Rows[0].Selected = true;
         }
         catch (Exception ex)
         {
