@@ -36,9 +36,12 @@ Do not manually run ALTER SESSION SET "_ORACLE_SCRIPT"=true before setup. The re
 
 7. 07_audit.sql
    Configures Standard Audit, FGA, and Unified Audit examples.
+   Run with SYSTEM on localhost:1521/XEPDB1 after 05_vpd.sql.
 
 8. 08_backup.sql
    Contains backup/restore implementation notes and PL/SQL scheduler procedures.
+   Run with SYSTEM on localhost:1521/XEPDB1 for Flashback/Data Pump/Scheduler demo.
+   LogMiner and RMAN sections are documented commands that must be run manually as SYSDBA/OS when needed.
 
 PH1 support scripts:
 

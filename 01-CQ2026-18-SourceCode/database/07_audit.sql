@@ -62,9 +62,11 @@ NOAUDIT DELETE ON SYSTEM."BỆNHNHÂN";
 -- Mục đích: Phát hiện tấn công brute-force hoặc tài khoản bị lộ mật khẩu
 AUDIT SESSION WHENEVER NOT SUCCESSFUL;
 
--- Ngữ cảnh 2: SELECT, INSERT, UPDATE trên NHÂNVIÊN bởi bs001
--- Mục đích: Giám sát bác sĩ cụ thể khi truy cập dữ liệu nhân sự
-AUDIT SELECT, INSERT, UPDATE ON SYSTEM."NHÂNVIÊN" BY bs001 WHENEVER SUCCESSFUL;
+-- Ngữ cảnh 2: SELECT, INSERT, UPDATE trên NHÂNVIÊN
+-- Mục đích: Giám sát truy cập dữ liệu nhân sự; khi đọc audit trail lọc USERNAME='BS001'.
+-- Object audit của Oracle không hỗ trợ lọc theo user tại cú pháp AUDIT object;
+-- phải dùng BY ACCESS/BY SESSION và lọc USERNAME khi truy vấn audit trail.
+AUDIT SELECT, INSERT, UPDATE ON SYSTEM."NHÂNVIÊN" BY ACCESS WHENEVER SUCCESSFUL;
 
 -- Ngữ cảnh 3: CREATE TABLE, DROP TABLE (thay đổi cấu trúc CSDL)
 -- Mục đích: Phát hiện tạo/xóa bảng trái phép trong hệ thống y tế
@@ -177,12 +179,12 @@ PROMPT >> [OK] Fine-Grained Audit 4 tinh huong da thiet lap.
 -- ==============================================================================
 
 -- Bổ sung tình huống c: UPDATE HSBA thất bại do thiếu quyền
-CREATE OR REPLACE AUDIT POLICY AUD_UA_HSBA_ILLEGAL_UPDATE
+CREATE AUDIT POLICY AUD_UA_HSBA_ILLEGAL_UPDATE
     ACTIONS UPDATE ON SYSTEM."HSBA";
 AUDIT POLICY AUD_UA_HSBA_ILLEGAL_UPDATE WHENEVER NOT SUCCESSFUL;
 
 -- Bổ sung tình huống d: INSERT/DELETE HSBA_DV thất bại do thiếu quyền
-CREATE OR REPLACE AUDIT POLICY AUD_UA_HSBADV_ILLEGAL
+CREATE AUDIT POLICY AUD_UA_HSBADV_ILLEGAL
     ACTIONS INSERT ON SYSTEM."HSBA_DV",
             DELETE ON SYSTEM."HSBA_DV";
 AUDIT POLICY AUD_UA_HSBADV_ILLEGAL WHENEVER NOT SUCCESSFUL;
@@ -199,16 +201,16 @@ PROMPT >> [OK] Unified Audit bo sung tinh huong c, d da thiet lap.
 /*
 -- Kịch bản 1 (Ngữ cảnh 1): Đăng nhập sai mật khẩu
 -- Chạy ở terminal OS:
---   sqlplus bs001/SAI_MAT_KHAU@localhost:1521/XE
+--   sqlplus BS001/sai_mat_khau@localhost:1521/XEPDB1
 -- Kết quả: ORA-01017 → ghi vào DBA_AUDIT_TRAIL (RETURNCODE=1017, ACTION_NAME='LOGON')
 
 -- Kịch bản 2 (Ngữ cảnh 2): bs001 truy vấn bảng NHÂNVIÊN
-CONNECT bs001/Password123@localhost:1521/XE
+CONNECT BS001/"Welcome1#"@localhost:1521/XEPDB1
 SELECT * FROM SYSTEM."NHÂNVIÊN";
 -- Kết quả: ghi vào DBA_AUDIT_TRAIL (ACTION_NAME='SELECT', OBJ_NAME='NHÂNVIÊN')
 
 -- Kịch bản 3 (Tình huống b - FGA): Bác sĩ cập nhật CHẨNĐOÁN hợp lệ
-CONNECT bs001/Password123@localhost:1521/XE
+CONNECT BS001/"Welcome1#"@localhost:1521/XEPDB1
 UPDATE SYSTEM."HSBA"
 SET "CHẨNĐOÁN" = N'Viêm phổi cấp - đã xác nhận'
 WHERE "MÃHSBA" = 'HS001';
@@ -216,7 +218,7 @@ COMMIT;
 -- Kết quả: ghi vào DBA_FGA_AUDIT_TRAIL (POLICY_NAME='AUD_FGA_HSBA_BACSI_UPDATE')
 
 -- Kịch bản 4 (Tình huống a - FGA): Bác sĩ chỉnh sửa ĐƠNTHUỐC sau khi tạo
-CONNECT bs001/Password123@localhost:1521/XE
+CONNECT BS001/"Welcome1#"@localhost:1521/XEPDB1
 UPDATE SYSTEM."ĐƠNTHUỐC"
 SET "LIỀUDÙNG" = N'2 viên/ngày sau ăn - điều chỉnh'
 WHERE "MÃHSBA" = 'HS001' AND "TÊNTHUỐC" = N'Paracetamol';
@@ -224,7 +226,7 @@ COMMIT;
 -- Kết quả: ghi vào DBA_FGA_AUDIT_TRAIL (POLICY_NAME='AUD_FGA_DONTHUOC_UPDATE')
 
 -- Kịch bản 5 (Tình huống c - FGA + Unified): Điều phối viên cố cập nhật CHẨNĐOÁN
-CONNECT dpv001/Password123@localhost:1521/XE
+CONNECT DPV001/"Welcome1#"@localhost:1521/XEPDB1
 UPDATE SYSTEM."HSBA"
 SET "CHẨNĐOÁN" = N'Illegal attempt by DPV'
 WHERE "MÃHSBA" = 'HS001';
@@ -232,13 +234,13 @@ WHERE "MÃHSBA" = 'HS001';
 -- Nếu VPD cho qua → ghi vào DBA_FGA_AUDIT_TRAIL (AUD_FGA_HSBA_ILLEGAL_UPDATE)
 
 -- Kịch bản 6 (Tình huống d - FGA + Unified): KTV cố xóa dịch vụ
-CONNECT ktv001/Password123@localhost:1521/XE
+CONNECT KTV001/"Welcome1#"@localhost:1521/XEPDB1
 DELETE FROM SYSTEM."HSBA_DV" WHERE "MÃHSBA" = 'HS001';
 -- Nếu không có quyền → ghi vào UNIFIED_AUDIT_TRAIL (AUD_UA_HSBADV_ILLEGAL, RETURN_CODE!=0)
 -- Nếu có quyền đọc   → ghi vào DBA_FGA_AUDIT_TRAIL (AUD_FGA_HSBADV_ILLEGAL)
 
 -- Kịch bản 7 (Ngữ cảnh 5): Xóa bệnh nhân (rollback sau để không mất dữ liệu)
-CONNECT system/YourPassword@localhost:1521/XE
+CONNECT SYSTEM/"Welcome1#"@localhost:1521/XEPDB1
 DELETE FROM SYSTEM."BỆNHNHÂN" WHERE "MÃBN" = 'BN099';
 ROLLBACK;
 -- Kết quả: ghi vào DBA_AUDIT_TRAIL (ACTION_NAME='DELETE', OBJ_NAME='BỆNHNHÂN')

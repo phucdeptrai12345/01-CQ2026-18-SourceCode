@@ -3,7 +3,8 @@
 -- Dự án: PhanHe2 - Hệ thống Quản lý Y tế Bệnh viện
 -- Mô tả: Yêu cầu 4 - Sao lưu và Phục hồi dữ liệu
 --        Flashback + Data Pump + LogMiner + RMAN + DBMS_SCHEDULER (tự động)
--- Chạy với quyền: SYS / SYSDBA (trừ Data Pump chạy bằng SYSTEM)
+-- Chạy với quyền: SYSTEM trong XEPDB1 cho phần demo SQL/Data Pump/Scheduler.
+-- LogMiner/RMAN là phần hướng dẫn chạy thủ công bằng SYSDBA ở CDB$ROOT/OS.
 -- ==============================================================================
 SET DEFINE OFF;
 SET ECHO ON;
@@ -68,8 +69,25 @@ SELECT LOG_MODE, FLASHBACK_ON FROM V$DATABASE;
 --   ALTER DATABASE FLASHBACK ON;
 --   ALTER DATABASE OPEN;
 
--- Bật Supplemental Logging (cần cho LogMiner ghi đầy đủ thông tin)
-ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
+-- Bật Supplemental Logging (cần cho LogMiner ghi đầy đủ thông tin).
+-- Trên Oracle CDB/PDB, lệnh này phải chạy ở CDB$ROOT với SYSDBA.
+-- Khi script đang chạy trong XEPDB1, chỉ ghi chú và bỏ qua để không làm hỏng quy trình demo.
+DECLARE
+    v_con_name VARCHAR2(128);
+BEGIN
+    v_con_name := SYS_CONTEXT('USERENV', 'CON_NAME');
+    IF v_con_name = 'CDB$ROOT' THEN
+        EXECUTE IMMEDIATE 'ALTER DATABASE ADD SUPPLEMENTAL LOG DATA';
+        DBMS_OUTPUT.PUT_LINE('[OK] Supplemental logging da bat trong CDB$ROOT.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('[INFO] Dang o ' || v_con_name || '; bo qua ALTER DATABASE ADD SUPPLEMENTAL LOG DATA.');
+        DBMS_OUTPUT.PUT_LINE('[INFO] Neu can LogMiner that, chay lenh nay bang SYSDBA tai CDB$ROOT.');
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('[INFO] Khong the bat supplemental logging tu session hien tai: ' || SQLERRM);
+END;
+/
 
 -- Cho phép Flashback trên các bảng quan trọng (cần ROW MOVEMENT)
 ALTER TABLE SYSTEM."BỆNHNHÂN" ENABLE ROW MOVEMENT;
@@ -84,17 +102,21 @@ PROMPT >> [OK] Cau hinh nen tang hoan tat.
 -- PHẦN 3: FLASHBACK - PHỤC HỒI NHANH LỖI NGƯỜI DÙNG
 -- ==============================================================================
 
--- 3A. Flashback Query: Xem dữ liệu tại thời điểm cũ (không thay đổi dữ liệu thật)
--- Ví dụ: Xem bảng HSBA 30 phút trước để so sánh với hiện tại
+-- 3A. Flashback Query: Xem dữ liệu tại một thời điểm (không thay đổi dữ liệu thật).
+-- Sau khi reset/create lại schema, không truy vấn lùi 30 phút trực tiếp vì bảng vừa đổi DDL
+-- có thể gây ORA-01466. Khi demo lỗi người dùng thật, đổi SYSTIMESTAMP thành:
+--   SYSTIMESTAMP - INTERVAL '30' MINUTE
 SELECT "MÃHSBA", "CHẨNĐOÁN", "ĐIỀUTRỊ", "KẾTLUẬN"
 FROM SYSTEM."HSBA"
-AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE)
+AS OF TIMESTAMP SYSTIMESTAMP
 ORDER BY "MÃHSBA";
 
--- 3B. Kiểm tra dữ liệu ĐƠNTHUỐC 1 giờ trước
+-- 3B. Kiểm tra dữ liệu ĐƠNTHUỐC bằng Flashback Query.
+-- Khi cần demo phục hồi thật, có thể đổi SYSTIMESTAMP thành:
+--   SYSTIMESTAMP - INTERVAL '60' MINUTE
 SELECT "MÃHSBA", "TÊNTHUỐC", "LIỀUDÙNG"
 FROM SYSTEM."ĐƠNTHUỐC"
-AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '60' MINUTE)
+AS OF TIMESTAMP SYSTIMESTAMP
 ORDER BY "MÃHSBA";
 
 -- 3C. Flashback Table: Khôi phục bảng về thời điểm cụ thể
@@ -105,44 +127,38 @@ ORDER BY "MÃHSBA";
 -- Bước 2: Thực hiện flashback (thay timestamp phù hợp)
 -- FLASHBACK TABLE SYSTEM."HSBA" TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
 
--- 3D. Demo: Tạo tình huống lỗi và phục hồi bằng Flashback
--- !! CẢNH BÁO: Đoạn này là kịch bản demo PHẢI CHẠY THỦ CÔNG từng bước !!
--- !! KHÔNG nên chạy tự động trong script vì sẽ phá dữ liệu thực !!
+/* ============================================================================
+   3D. Demo: Tạo tình huống lỗi và phục hồi bằng Flashback
+   CẢNH BÁO: Đoạn này CHỈ CHẠY THỦ CÔNG từng bước trong môi trường demo.
+   KHÔNG chạy toàn bộ trong cùng một lần — UPDATE sẽ xóa dữ liệu thật!
+   ============================================================================
 
-/*
--- BƯỚC 1: Lưu timestamp trước khi thao tác
+-- Bước 1: Lưu timestamp trước khi thao tác
 CREATE TABLE SYSTEM.FLASHBACK_DEMO_LOG (
     DEMO_TIME TIMESTAMP DEFAULT SYSTIMESTAMP,
     NOTE      VARCHAR2(200)
 );
-
 INSERT INTO SYSTEM.FLASHBACK_DEMO_LOG (NOTE)
 VALUES ('Truoc khi gia lap loi - HSBA');
 COMMIT;
 
--- Ghi lại timestamp để dùng trong bước phục hồi:
-SELECT DEMO_TIME FROM SYSTEM.FLASHBACK_DEMO_LOG;
-
--- BƯỚC 2: Giả lập lỗi - UPDATE sai chẩn đoán hàng loạt
+-- Bước 2: Giả lập lỗi (chạy riêng, có chủ đích)
 UPDATE SYSTEM."HSBA" SET "CHẨNĐOÁN" = N'[LỖI] Dữ liệu bị ghi đè nhầm';
 COMMIT;
 
--- Kiểm tra dữ liệu bị lỗi
+-- Bước 3: Kiểm tra dữ liệu bị lỗi
 SELECT "MÃHSBA", "CHẨNĐOÁN" FROM SYSTEM."HSBA";
 
--- BƯỚC 3: Phục hồi bằng Flashback Table
--- Thay timestamp cho phù hợp với thời điểm ghi ở BƯỚC 1
+-- Bước 4: Phục hồi bằng Flashback Table về 5 phút trước
 FLASHBACK TABLE SYSTEM."HSBA"
 TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '5' MINUTE);
 
--- Xác nhận đã phục hồi
+-- Bước 5: Xác nhận đã phục hồi
 SELECT "MÃHSBA", "CHẨNĐOÁN" FROM SYSTEM."HSBA";
 
--- Dọn dẹp bảng demo
+-- Bước 6: Dọn dẹp bảng demo
 DROP TABLE SYSTEM.FLASHBACK_DEMO_LOG;
-*/
-
-PROMPT >> [INFO] Demo Flashback da duoc chuyen sang comment - chay thu cong tung buoc.
+============================================================================ */
 
 
 -- ==============================================================================
@@ -151,19 +167,39 @@ PROMPT >> [INFO] Demo Flashback da duoc chuyen sang comment - chay thu cong tung
 -- Data Pump chạy bằng lệnh OS (expdp/impdp), không phải SQL.
 -- Tạo thư mục Oracle Directory để lưu file dump.
 
--- Tạo thư mục vật lý trên OS trước:
---   mkdir -p /opt/oracle/backup/datapump
---   chown oracle:oinstall /opt/oracle/backup/datapump
+-- Script ưu tiên dùng đường dẫn thật của DATA_PUMP_DIR do Oracle XE tạo sẵn,
+-- rồi ánh xạ lại thành BACKUP_DIR để các câu lệnh bên dưới thống nhất tên.
+DECLARE
+    v_path VARCHAR2(4000);
+    v_user VARCHAR2(128);
+BEGIN
+    SELECT directory_path
+    INTO v_path
+    FROM all_directories
+    WHERE directory_name = 'DATA_PUMP_DIR'
+    FETCH FIRST 1 ROW ONLY;
 
--- Tạo Oracle Directory object
-CREATE OR REPLACE DIRECTORY BACKUP_DIR AS '/opt/oracle/backup/datapump';
-GRANT READ, WRITE ON DIRECTORY BACKUP_DIR TO SYSTEM;
+    EXECUTE IMMEDIATE
+        'CREATE OR REPLACE DIRECTORY BACKUP_DIR AS ''' || REPLACE(v_path, '''', '''''') || '''';
+
+    v_user := SYS_CONTEXT('USERENV', 'SESSION_USER');
+    IF v_user <> 'SYSTEM' THEN
+        EXECUTE IMMEDIATE 'GRANT READ, WRITE ON DIRECTORY BACKUP_DIR TO SYSTEM';
+    END IF;
+
+    DBMS_OUTPUT.PUT_LINE('[OK] BACKUP_DIR tro den: ' || v_path);
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('[INFO] Khong tim thay DATA_PUMP_DIR. Tao OS folder truoc roi sua BACKUP_DIR cho phu hop.');
+        RAISE;
+END;
+/
 
 PROMPT >> [OK] Oracle Directory BACKUP_DIR da tao.
 
 /*
 -- Chạy Export toàn bộ schema SYSTEM (lệnh OS, không phải SQL):
---   expdp system/YourPassword@localhost:1521/XE \
+--   expdp 'system/Welcome1#@localhost:1521/XEPDB1' \
 --         schemas=SYSTEM \
 --         directory=BACKUP_DIR \
 --         dumpfile=phanhe2_full_%DATE%.dmp \
@@ -171,7 +207,7 @@ PROMPT >> [OK] Oracle Directory BACKUP_DIR da tao.
 --         compression=ALL
 
 -- Chạy Import để phục hồi:
---   impdp system/YourPassword@localhost:1521/XE \
+--   impdp 'system/Welcome1#@localhost:1521/XEPDB1' \
 --         schemas=SYSTEM \
 --         directory=BACKUP_DIR \
 --         dumpfile=phanhe2_full_20250115.dmp \
@@ -184,34 +220,32 @@ PROMPT >> [OK] Oracle Directory BACKUP_DIR da tao.
 -- PHẦN 5: LOGMINER - PHÂN TÍCH LOG VÀ PHỤC HỒI CÓ CHỌN LỌC
 -- ==============================================================================
 
--- Bước 1: Thêm file Redo Log hiện tại vào LogMiner (thay đường dẫn phù hợp)
--- SELECT MEMBER FROM V$LOGFILE; -- Lấy đường dẫn file log thực tế
+PROMPT >> [INFO] LogMiner requires SYSDBA in CDB$ROOT, so executable demo is documented below.
 
--- Bước 2: Khởi động LogMiner
+/*
+-- Run manually as SYSDBA in CDB$ROOT, not in XEPDB1:
+--   sqlplus / as sysdba
+
+-- 1. Find the real redo log path on this machine:
+SELECT MEMBER FROM V$LOGFILE;
+
+-- 2. Start LogMiner with one real redo log file:
 BEGIN
-    -- Xóa session cũ nếu có
     BEGIN DBMS_LOGMNR.END_LOGMNR; EXCEPTION WHEN OTHERS THEN NULL; END;
 
-    -- Thêm redo log hiện tại
     DBMS_LOGMNR.ADD_LOGFILE(
-        LogFileName => '/opt/oracle/oradata/XE/redo01.log',
+        LogFileName => 'C:\APP\ADMIN\PRODUCT\21C\ORADATA\XE\REDO01.LOG',
         Options     => DBMS_LOGMNR.NEW
     );
 
-    -- Bắt đầu phân tích với catalog từ database đang chạy
     DBMS_LOGMNR.START_LOGMNR(
         Options => DBMS_LOGMNR.DICT_FROM_ONLINE_CATALOG +
                    DBMS_LOGMNR.COMMITTED_DATA_ONLY
     );
-    DBMS_OUTPUT.PUT_LINE('[OK] LogMiner da khoi dong.');
-EXCEPTION
-    WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('[INFO] LogMiner: ' || SQLERRM);
-        DBMS_OUTPUT.PUT_LINE('Hay thay duong dan file log cho phu hop voi he thong.');
 END;
 /
 
--- Bước 3: Xem tất cả thao tác trên các bảng nghiệp vụ gần đây
+-- 3. Read recent business-table changes and their undo SQL:
 SELECT
     TO_CHAR(TIMESTAMP, 'DD/MM/YYYY HH24:MI:SS') AS "Thoi gian",
     SEG_OWNER     AS "Schema",
@@ -226,27 +260,11 @@ WHERE SEG_OWNER   = 'SYSTEM'
 ORDER BY TIMESTAMP DESC
 FETCH FIRST 30 ROWS ONLY;
 
--- Bước 4: Lấy SQL_UNDO để hoàn tác thao tác cụ thể
--- Ví dụ: Tìm câu lệnh hoàn tác cho bảng HSBA trong 1 giờ qua
-SELECT
-    TO_CHAR(TIMESTAMP, 'DD/MM/YYYY HH24:MI:SS') AS "Thoi gian",
-    OPERATION     AS "Thao tac",
-    SQL_UNDO      AS "Lenh hoan tac (chay de restore)"
-FROM V$LOGMNR_CONTENTS
-WHERE SEG_OWNER  = 'SYSTEM'
-  AND TABLE_NAME = 'HSBA'
-  AND OPERATION  IN ('UPDATE','DELETE')
-  AND TIMESTAMP  >= SYSTIMESTAMP - INTERVAL '1' HOUR
-ORDER BY TIMESTAMP DESC;
-
--- Bước 5: Kết thúc phiên LogMiner
 BEGIN
     DBMS_LOGMNR.END_LOGMNR;
-    DBMS_OUTPUT.PUT_LINE('[OK] LogMiner da dong.');
-EXCEPTION
-    WHEN OTHERS THEN NULL;
 END;
 /
+*/
 
 
 -- ==============================================================================
@@ -301,7 +319,6 @@ BEGIN
         );
 
         -- Bắt đầu chạy và đợi hoàn tất
-        -- WAIT_FOR_JOB nhận OUT parameter job_state, không phải IN string literal
         DECLARE
             v_job_state VARCHAR2(30);
         BEGIN
@@ -363,7 +380,7 @@ BEGIN
         job_name        => 'JOB_WEEKLY_BACKUP',
         job_type        => 'STORED_PROCEDURE',
         job_action      => 'SP_AUTO_BACKUP',
-        start_date      => NEXT_DAY(TRUNC(SYSDATE), 'SUNDAY') + INTERVAL '1' HOUR,
+        start_date      => TRUNC(SYSDATE + 1) + INTERVAL '1' HOUR,
         repeat_interval => 'FREQ=WEEKLY; BYDAY=SUN; BYHOUR=1; BYMINUTE=0; BYSECOND=0',
         end_date        => NULL,
         enabled         => TRUE,
@@ -400,12 +417,12 @@ Chạy các lệnh RMAN sau trên Terminal của hệ điều hành:
 
 -- Full backup hàng tuần (chủ nhật):
   RMAN> BACKUP AS COMPRESSED BACKUPSET DATABASE PLUS ARCHIVELOG
-        FORMAT '/opt/oracle/backup/rman/full_%T_%U.bkp'
+        FORMAT 'C:\oracle_backup\rman\full_%T_%U.bkp'
         TAG 'WEEKLY_FULL';
 
 -- Incremental backup hàng ngày:
   RMAN> BACKUP INCREMENTAL LEVEL 1
-        DATABASE FORMAT '/opt/oracle/backup/rman/incr_%T_%U.bkp'
+        DATABASE FORMAT 'C:\oracle_backup\rman\incr_%T_%U.bkp'
         TAG 'DAILY_INCR';
 
 -- Phục hồi khi mất toàn bộ database:
@@ -434,20 +451,23 @@ SELECT
     JOB_NAME            AS "Ten Job",
     TO_CHAR(ACTUAL_START_DATE, 'DD/MM/YYYY HH24:MI:SS') AS "Thoi gian chay",
     STATUS              AS "Trang thai",
-    RUN_DURATION        AS "Thoi gian chay",
-    ADDITIONAL_INFO     AS "Ghi chu"
+    RUN_DURATION        AS "Thoi gian chay"
 FROM DBA_SCHEDULER_JOB_RUN_DETAILS
 WHERE JOB_NAME IN ('JOB_DAILY_BACKUP', 'JOB_WEEKLY_BACKUP')
 ORDER BY ACTUAL_START_DATE DESC
 FETCH FIRST 20 ROWS ONLY;
 
--- Xem file backup Data Pump đã tạo
+-- Xem các Data Pump job còn được Oracle ghi nhận
 SELECT
-    FILENAME,
-    TO_CHAR(LAST_UPDATE, 'DD/MM/YYYY HH24:MI:SS') AS "Ngay tao",
-    FILESIZE / 1024 / 1024 AS "Kich thuoc (MB)"
+    OWNER_NAME          AS "Owner",
+    JOB_NAME            AS "Job",
+    OPERATION           AS "Operation",
+    JOB_MODE            AS "Mode",
+    STATE               AS "State",
+    DEGREE              AS "Degree",
+    ATTACHED_SESSIONS   AS "Attached sessions",
+    DATAPUMP_SESSIONS   AS "Datapump sessions"
 FROM DBA_DATAPUMP_JOBS
-WHERE STATE = 'NOT RUNNING'
-ORDER BY LAST_UPDATE DESC;
+ORDER BY OWNER_NAME, JOB_NAME;
 
 PROMPT >> 08_backup.sql hoan tat.
