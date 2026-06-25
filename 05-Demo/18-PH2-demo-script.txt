@@ -47,7 +47,7 @@ Bước 3: Click "👤 Bệnh nhân" → CoordinatorDashboard tab Bệnh nhân:
          → Nhìn vào DGV: thấy NHIỀU bệnh nhân (tất cả BN001..BN005...)
          → Nói: "Điều phối viên xem được toàn bộ danh sách bệnh nhân."
 
-Bước 4: Click "➕ Thêm bệnh nhân" → PatientEditDialog mở ra:
+Bước 4: Click "➕  Thêm mới" → PatientEditDialog mở ra:
          Điền: Họ tên = Nguyễn Văn Test, CCCD = 012345678999, Phái = Nam
          → Nhấn Lưu → thông báo thành công → DGV cập nhật.
          → Nói: "Điều phối viên có quyền thêm bệnh nhân mới (TC#2)."
@@ -57,7 +57,7 @@ Bước 5: Click "📁 Hồ sơ bệnh án" → tab HSBA:
          → Click "➕ Tạo HSBA" → HsbaEditDialog → điền MaBN = BN001 → Lưu.
          → Nói: "Điều phối viên tạo được HSBA mới, sau đó gán bác sĩ phụ trách."
 
-Bước 6: Chọn 1 HSBA vừa tạo → Click "Gán bác sĩ" → chọn BS001 → OK.
+Bước 6: Chọn 1 HSBA vừa tạo → Click "👨⚕️  Phân công Bác sĩ" → chọn BS001 → OK.
          → Nói: "VPD sẽ tự đảm bảo BS001 chỉ thấy HSBA này của mình."
 
 Bước 7: Click "🔧 Phân công KTV" → tab Dịch vụ:
@@ -77,13 +77,16 @@ Bước 10: Click "📁 HSBA của tôi":
           → Đọc số dòng ở góc dưới: "Hồ sơ của tôi: X"
           → Nói: "BS001 chỉ thấy HSBA do chính mình phụ trách."
 
-Bước 11: Chọn 1 HSBA → Click "📝 Cập nhật chẩn đoán":
-          → DiagnosisEditDialog mở → sửa CHẨN ĐOÁN = "Viêm dạ dày cấp (đã cập nhật)" → Lưu.
+Bước 11: Chọn 1 HSBA → Click "✏️  Cập nhật CĐ":
+          → DiagnosisEditDialog mở → sửa Chẩn đoán = "Viêm dạ dày cấp (đã cập nhật)" → Lưu.
           → Nói: "BS001 cập nhật chẩn đoán — hành vi này sẽ bị ghi vết vào AUDIT_LOG."
 
-Bước 12: Click "💊 Đơn thuốc":
-          → Click "➕ Kê đơn thuốc" → điền Tên thuốc = Omeprazole, Liều dùng = 20mg x 2/ngày → Lưu.
+Bước 12: Vẫn đang ở tab "📁 HSBA của tôi" → đảm bảo vẫn chọn 1 HSBA trong DGV.
+          → Click thẳng vào tab "  💊  Đơn thuốc  " (tab thứ 3 trên thanh tab).
+          → DGV đơn thuốc tải tự động → Click "➕  Thêm thuốc".
+          → Điền Tên thuốc = Omeprazole, Liều dùng = 20mg x 2/ngày → Lưu.
           → Nói: "Bác sĩ kê đơn thuốc cho bệnh nhân (TC#3.e)."
+          LƯU Ý: KHÔNG click sidebar "💊 Đơn thuốc" — sẽ load dashboard mới, mất selection HSBA.
 
 Bước 13: Đăng xuất → Đăng nhập lại bằng BS002 / Welcome1#.
 
@@ -140,17 +143,25 @@ Bước 24: Đăng xuất.
 
 Mục đích: Chứng minh OLS lọc thông báo theo nhãn (cấp bậc + khoa + cơ sở).
 
-Bước 25: LoginForm → Username: GD01 / password123 → ĐĂNG NHẬP
-          → Click "🔔 Thông báo" (sidebar).
-          → Thấy NHIỀU thông báo (Giám đốc đọc được tất cả — u1 trong đề).
+Bước 25: LoginForm → Username: DPV001 / Welcome1# → ĐĂNG NHẬP
+          → Click "🔔  Thông báo" (sidebar dưới cùng).
           → Đọc số dòng: "Thông báo hiển thị: N"
-          → Nói: "GD01 là Ban giám đốc, đọc được toàn bộ thông báo."
+          → Nói: "DPV001 là Điều phối viên — OLS cho phép đọc thông báo cấp quản lý."
 
-Bước 26: Đăng xuất → Đăng nhập bằng KTV001 / Welcome1#.
-          → Click "🔔 Thông báo".
-          → Thấy ÍT thông báo hơn GD01 (chỉ thông báo gửi đến nhân viên + khoa tương ứng).
-          → Đọc số dòng: "Thông báo hiển thị: M" (M < N).
-          → Nói: "KTV001 là nhân viên, Oracle Label Security tự động lọc — chỉ thấy thông báo đúng nhãn."
+Bước 26: Đăng xuất → Đăng nhập bằng BN001 / Welcome1#.
+          → Click "🔔  Thông báo".
+          → Đọc số dòng: "Thông báo hiển thị: M" (M <= N).
+          → Nói: "BN001 là Bệnh nhân, Oracle Label Security tự lọc — chỉ thấy thông báo dành cho cấp bậc tương ứng."
+          → Nếu M = N: chuyển sang SQL*Plus để chứng minh OLS hoạt động ở tầng DB (xem bước phụ bên dưới).
+
+[BỔ SUNG - nếu app hiện cùng số dòng]: Alt+Tab sang SQL*Plus:
+          CONN DPV001/Welcome1#@localhost:1521/XEPDB1
+          SELECT COUNT(*) FROM SYSTEM."THÔNGBÁO";
+          /
+          CONN BN001/Welcome1#@localhost:1521/XEPDB1
+          SELECT COUNT(*) FROM SYSTEM."THÔNGBÁO";
+          /
+          → 2 con số khác nhau → OLS lọc đúng ở tầng Oracle.
 
 Bước 27: Đăng xuất.
 
@@ -199,17 +210,20 @@ Bước 33: Dán và chạy lệnh Unified Audit:
       → Nói: "Unified Audit Trail ghi vết chi tiết hơn, bao gồm cả FGA."
 
 Bước 34: Chứng minh audit hành vi bất hợp pháp:
-      -- Thử cập nhật với user không có quyền:
+      -- BN001 thử truy cập bảng NHÂNVIÊN (không có quyền):
       CONN BN001/Welcome1#@localhost:1521/XEPDB1
-      UPDATE SYSTEM."HSBA" SET "CHẨNĐOÁN"='hack' WHERE ROWNUM=1;
+      SELECT COUNT(*) FROM SYSTEM."NHÂNVIÊN";
       /
-      → ORA-01031: insufficient privileges (hoặc 0 rows updated do VPD).
+      → ORA-00942: table or view does not exist (BN001 không có quyền SELECT).
       → CONN SYSTEM/Welcome1#@localhost:1521/XEPDB1
-      SELECT USERNAME, ACTION_NAME, RETURNCODE, TIMESTAMP
-      FROM DBA_AUDIT_TRAIL WHERE USERNAME='BN001' ORDER BY TIMESTAMP DESC FETCH FIRST 5 ROWS ONLY;
+      SELECT USERNAME, ACTION_NAME, OBJ_NAME, RETURNCODE, TIMESTAMP
+      FROM DBA_AUDIT_TRAIL
+      WHERE USERNAME='BN001'
+      ORDER BY TIMESTAMP DESC
+      FETCH FIRST 5 ROWS ONLY;
       /
-      → RETURNCODE khác 0 → hành vi bất hợp pháp bị ghi nhận (YC3.c).
-      → Nói: "Oracle audit ghi nhận cả thao tác thất bại."
+      → RETURNCODE = 942 → hành vi bất hợp pháp bị ghi nhận (YC3.c).
+      → Nói: "Oracle ghi nhận cả thao tác thất bại — RETURNCODE 942 = không có quyền."
 
 Bước 35: Alt+Tab về AdminForm.
 
@@ -285,7 +299,7 @@ Bước 42: Quay lại HospitalSystem.exe.
   BS002      / Welcome1#   → Bác sĩ (VPD - thấy HSBA khác BS001)
   KTV001     / Welcome1#   → Kỹ thuật viên (RBAC)
   BN001      / Welcome1#   → Bệnh nhân (RBAC + VPD)
-  GD01       / password123 → Giám đốc (OLS - thấy tất cả thông báo)
+  [GD01/password123 chỉ dùng cho PH1 AdminForm, KHÔNG login được PH2]
 
   Host: localhost | Port: 1521 | Service: XEPDB1
 
