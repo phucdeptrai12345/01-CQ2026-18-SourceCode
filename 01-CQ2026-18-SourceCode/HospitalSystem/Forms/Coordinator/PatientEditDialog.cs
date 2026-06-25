@@ -7,7 +7,7 @@ namespace HospitalSystem.Forms.Coordinator;
 public class PatientEditDialog : Form
 {
     private readonly BenhNhan? _existing;
-    private TextBox txtMaBN, txtTenBN, txtPhai, txtCCCD, txtSoNha, txtTenDuong, txtQuanHuyen, txtTinhTP;
+    private TextBox txtMaBN, txtTenBN, txtPhai, txtCCCD, txtSoNha, txtTenDuong, txtQuanHuyen, txtTinhTP, txtOraUser;
     private DateTimePicker dtpNgaySinh;
     private Button btnOK, btnCancel;
     private Label lblTitle;
@@ -22,7 +22,7 @@ public class PatientEditDialog : Form
     private void SetupUI()
     {
         this.Text = _existing == null ? "Thêm bệnh nhân mới" : "Sửa thông tin bệnh nhân";
-        this.Size = new Size(500, 480);
+        this.Size = new Size(500, 520);
         this.StartPosition = FormStartPosition.CenterParent;
         this.BackColor = Color.FromArgb(20, 20, 40);
         this.Font = new Font("Segoe UI", 9f);
@@ -58,6 +58,7 @@ public class PatientEditDialog : Form
         AddField("Tên đường:", ref y, out txtTenDuong);
         AddField("Quận/Huyện:", ref y, out txtQuanHuyen);
         AddField("Tỉnh/TP:", ref y, out txtTinhTP);
+        AddField("Tài khoản Oracle:", ref y, out txtOraUser);
 
         btnOK = new Button { Text = "✔  Lưu", Width = 100, Height = 36, Left = 270, Top = y + 5, BackColor = Color.FromArgb(21, 101, 192), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10f, FontStyle.Bold), Cursor = Cursors.Hand, DialogResult = DialogResult.None };
         btnOK.FlatAppearance.BorderSize = 0;
@@ -78,6 +79,7 @@ public class PatientEditDialog : Form
         txtTenDuong.Text = bn.TenDuong;
         txtQuanHuyen.Text = bn.QuanHuyen;
         txtTinhTP.Text = bn.TinhTP;
+        txtOraUser.Text = bn.OraUser;
     }
 
     private void BtnOK_Click(object? sender, EventArgs e)
@@ -94,7 +96,8 @@ public class PatientEditDialog : Form
                 SoNha = txtSoNha.Text.Trim(),
                 TenDuong = txtTenDuong.Text.Trim(),
                 QuanHuyen = txtQuanHuyen.Text.Trim(),
-                TinhTP = txtTinhTP.Text.Trim()
+                TinhTP = txtTinhTP.Text.Trim(),
+                OraUser = txtOraUser.Text.Trim()
             };
 
             if (_existing == null)

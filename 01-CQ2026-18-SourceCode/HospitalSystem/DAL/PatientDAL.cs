@@ -124,8 +124,8 @@ public static class PatientDAL
             cmd.Parameters.Add(new OracleParameter("tienSuBenhGD", (object?)bn.TienSuBenhGD ?? DBNull.Value));
             cmd.Parameters.Add(new OracleParameter("diUngThuoc", (object?)bn.DiUngThuoc ?? DBNull.Value));
             cmd.Parameters.Add(new OracleParameter("maBN", bn.MaBN));
-            cmd.ExecuteNonQuery();
-            return true;
+            int rows = cmd.ExecuteNonQuery();
+            return rows > 0;
         }
         catch (Exception ex)
         {
@@ -158,8 +158,8 @@ public static class PatientDAL
             cmd.Parameters.Add(new OracleParameter("tienSuBenh", (object?)bn.TienSuBenh ?? DBNull.Value));
             cmd.Parameters.Add(new OracleParameter("tienSuBenhGD", (object?)bn.TienSuBenhGD ?? DBNull.Value));
             cmd.Parameters.Add(new OracleParameter("diUngThuoc", (object?)bn.DiUngThuoc ?? DBNull.Value));
-            cmd.ExecuteNonQuery();
-            return true;
+            int rows = cmd.ExecuteNonQuery();
+            return rows > 0;
         }
         catch (Exception ex)
         {

@@ -116,8 +116,8 @@ public static class HsbaDAL
             cmd.Parameters.Add(new OracleParameter("dieuTri", (object?)h.DieuTri ?? DBNull.Value));
             cmd.Parameters.Add(new OracleParameter("ketLuan", (object?)h.KetLuan ?? DBNull.Value));
             cmd.Parameters.Add(new OracleParameter("maHSBA", h.MaHSBA));
-            cmd.ExecuteNonQuery();
-            return true;
+            int rows = cmd.ExecuteNonQuery();
+            return rows > 0;
         }
         catch (Exception ex)
         {

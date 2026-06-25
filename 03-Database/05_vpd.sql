@@ -369,8 +369,8 @@ BEGIN
     policy_name     => 'POL_BACSI_DONTHUOC',
     function_schema => 'SYSTEM',
     policy_function => 'VPD_BACSI_PKG.policy_donthuoc',
-    statement_types => 'SELECT,UPDATE,DELETE',
-    update_check    => FALSE,
+    statement_types => 'SELECT,INSERT,UPDATE,DELETE',
+    update_check    => TRUE,
     enable          => TRUE
   );
 END;
@@ -595,8 +595,8 @@ BEGIN
     policy_name     => 'POL_HSBADV',
     function_schema => 'SYSTEM',
     policy_function => 'VPD_BACSI_PKG.policy_hsbadv',
-    statement_types => 'SELECT,UPDATE,DELETE',
-    update_check    => FALSE,
+    statement_types => 'SELECT,INSERT,UPDATE,DELETE',
+    update_check    => TRUE,
     enable          => TRUE
   );
 END;
